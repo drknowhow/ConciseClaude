@@ -1,0 +1,27 @@
+{
+  "outputStyle": "Concise",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" \"<HOOKS_DIR>/reply_shape.py\" stop",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"<PYTHON>\" \"<HOOKS_DIR>/reply_shape.py\" prompt",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
