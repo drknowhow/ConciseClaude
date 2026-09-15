@@ -2,8 +2,7 @@
 
 A reply system for Claude Code: shorter, more direct answers with the same
 depth of work behind them. It changes how much Claude **says**, not how much it
-reads, thinks, or verifies. Optionally it adds [C3](https://github.com/drknowhow/code-context-control)
-so Claude also *reads* less.
+reads, thinks, or verifies.
 
 Version: see [`VERSION`](VERSION) · changes: [`CHANGELOG.md`](CHANGELOG.md) · license: Apache-2.0
 
@@ -24,7 +23,6 @@ changelog before replacing anything.
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/v <ask>` lifts the budget for one reply. `/u <ask>` squeezes it to 150 chars. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
-| C3 (optional) | `c3/claude-md-snippet.md` | Installs C3 from PyPI (`code-context-control`) and tells Claude how to use it: map files, read single symbols, filter long output. Its own reply-style advisor is switched off. |
 | Version | `VERSION`, `CHANGELOG.md` | One canonical version; `tests/test_version_sync.py` fails if any copy drifts. |
 | Tests | `tests/` | `python tests/test_reply_shape.py` and `python tests/test_version_sync.py` (or pytest). |
 

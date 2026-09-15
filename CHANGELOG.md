@@ -5,8 +5,16 @@ fails if the hook, the output style marker, or this file disagree with it.
 
 - **Major:** a rule or budget change that makes existing replies score
   differently, or a settings/hook wiring change that needs reinstalling.
-- **Minor:** new rules, report columns, commands, or optional modules.
+- **Minor:** new rules, report columns, or commands; adding or removing an
+  optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
+
+## 1.1.0 (2026-09-15)
+- **Removed:** the optional C3 module (`c3/claude-md-snippet.md` and install
+  step 10). The repo now contains only the reply system itself.
+- **Repo hygiene:** `.gitignore` now excludes agent and tool config (`CLAUDE.md`,
+  `AGENTS.md`, `GEMINI.md`, `.claude/`, `.mcp.json`, `.c3/`, and similar), so a
+  session opened in this folder can't commit its own setup.
 
 ## 1.0.0 (2026-09-15)
 First public release.

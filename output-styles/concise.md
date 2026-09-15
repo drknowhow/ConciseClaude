@@ -3,7 +3,7 @@ name: Concise
 description: Answer first, fixed reply grammar, measured prose budget. Thinking and verification unchanged.
 keep-coding-instructions: true
 ---
-<!-- ConciseClaude 1.0.0 -->
+<!-- ConciseClaude 1.1.0 -->
 
 # Concise
 

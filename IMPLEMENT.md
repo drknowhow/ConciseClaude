@@ -74,33 +74,10 @@ and asking.
      environment variable `REPLY_SHAPE_DEBUG=1` set, and check the hook command
      path and interpreter.
 
-10. **C3 (optional, recommended).** C3 cuts what Claude *reads* the same way
-    this package cuts what it *writes*: it maps files and reads single
-    symbols instead of whole files, and filters long terminal output. Ask the
-    user before installing it, since it adds an MCP server.
-    - Needs Python 3.10 or newer. Install from PyPI:
-      `pipx install code-context-control` (or
-      `<PYTHON> -m pip install --user code-context-control`). Confirm with
-      `c3 --version`.
-    - Initialize each project the user wants it in:
-      `c3 init <project path> --force --ide claude --mcp-mode direct --permissions standard`.
-      `standard` sets tool discipline to **advisory**: native tools stay
-      usable and C3 only nudges. Use `--no-embed` on very large repos.
-    - Turn off C3's own reply-style advisor so only one rule set applies:
-      `c3 terse dismiss`.
-    - Append `c3/claude-md-snippet.md` to `~/.claude/CLAUDE.md` below the
-      Replies snippet.
-    - Verify in a new session inside an initialized project: `c3_search`
-      should be available, and a `c3_read(file_path)` on any source file
-      returns a map.
-    - If company policy blocks third-party MCP servers or PyPI installs, skip
-      this step and say so. The reply system works without C3.
-
-11. **Report** in the new style: a result line, the installed version, the
+10. **Report** in the new style: a result line, the installed version, the
     `settings.json` diff, and anything skipped and why.
 
 ## Uninstall
 Remove the two hook entries and `outputStyle` from `settings.json`. Delete the
-copied files and `~/.claude/reply_shape/`. Remove both snippets from
-`~/.claude/CLAUDE.md`. For C3: run `c3 init <project> --clear` per project,
-then `pipx uninstall code-context-control`.
+copied files and `~/.claude/reply_shape/`. Remove the snippet from
+`~/.claude/CLAUDE.md`.

@@ -1,7 +1,26 @@
+# Python
 __pycache__/
 *.pyc
 .pytest_cache/
-.c3/
 .venv/
+
+# Agent and tool config created by sessions opened in this folder.
+# The package's own payload lives in output-styles/, commands/, skills/, hooks/.
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+GEMINI.md
+.claude/
+.mcp.json
+.c3/
+.codex/
+.gemini/
+.cursor/
+.cursorrules
+.windsurfrules
+.github/copilot-instructions.md
+.playwright-mcp/
+
+# OS
 .DS_Store
 Thumbs.db
