@@ -42,8 +42,9 @@ Each point comes from running an earlier version of this system.
 - **One copy of the rules.** The earlier setup had three overlapping rules: "≤4
   lines", "≤5 lines", and "400 chars". Replies drifted toward the loosest one.
 - **Characters, not lines.** Lines wrap differently in a terminal, an IDE panel,
-  and a phone. Prose characters outside code, tables, and URLs track what you
-  actually read.
+  and a phone. Prose characters outside code and URLs track what you actually
+  read. Table cells count too: moving text into a table doesn't make it
+  shorter to read.
 - **Exceptions are bounded and labeled.** An open-ended "never compress
   security, errors, planning, review" list covered most real work, so most
   replies qualified. Now the exception has a 900-char ceiling and needs a label,
@@ -68,11 +69,13 @@ session mixes. The nudge helped, but IDE replies still ran over budget more
 often than not. Labels weren't being gamed (8% of replies), but 70% of labeled
 replies went past 900 anyway. If nudge isn't enough, switch to block.
 
-The original version measured length only. This one also records whether your
-next prompt asked for **more** (`/v`, "what do you mean", "elaborate") or
-**shorter** ("too long", "tl;dr", `/u`). That's the check on "concise without
-losing quality": if `asked_more` climbs while the median falls, the budget is
-cutting substance, so raise it. The original also silently skipped some replies
+The original version measured length only. This one also records when your
+next prompt asks for **more** (`/v`) or **shorter** (`/u`). That's the check on
+"concise without losing quality": if `asked_more` climbs while the median
+falls, the budget is cutting substance, so raise it. Only the explicit
+commands count. Phrases like "explain this" or "shorter" usually refer to the
+code, not the reply, so matching them (as 1.x did) filled the report with
+false signals. If you never type `/v` or `/u`, these columns stay at 0%. The original also silently skipped some replies
 because it read the transcript before the final message was written. This
 version reads the reply Claude Code hands the hook directly.
 

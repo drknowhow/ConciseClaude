@@ -5,8 +5,8 @@ Hooks (wire both in ~/.claude/settings.json):
   reply_shape.py stop     Stop hook. Measures the final reply and appends one JSONL
                           row. In block mode, refuses the stop once when over budget.
   reply_shape.py prompt   UserPromptSubmit hook. Records a /v or /u stage for the
-                          coming reply, logs whether the prompt asks for more or
-                          shorter (the quality signal), and in nudge/block mode
+                          coming reply, logs that stage against the previous
+                          reply (the quality signal), and in nudge/block mode
                           tells the model its previous reply was over budget.
 Tools:
   reply_shape.py report [--days N] [--json]
@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "1.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "2.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -49,35 +49,44 @@ _FENCE_RE = re.compile(r"```.*?(?:```|\Z)|~~~.*?(?:~~~|\Z)", re.S)
 _HTML_LITERAL_RE = re.compile(r"<pre\b.*?</pre>|<code\b.*?</code>", re.S | re.I)
 _INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 _TABLE_LINE_RE = re.compile(r"^\s*\|.*\|\s*$", re.M)
+_TABLE_RULE_RE = re.compile(r"^\s*\|[\s:|-]*-[\s:|-]*\|\s*$", re.M)  # |---|:--:|
 _URL_RE = re.compile(r"https?://\S+")
-_MARKUP_RE = re.compile(r"[*_~>#]+|<[^>\n]{1,40}>")
+# Markup is not read. A <...> span is a tag only if it names an HTML element and
+# carries nothing but name=value (or known boolean) attributes, so prose such as
+# "if a <b and c> d" or "Dict<str, int>" still counts.
+_TAG_NAMES = (
+    "a|abbr|b|blockquote|br|code|dd|del|details|div|dl|dt|em|h[1-6]|hr|i|img|ins|kbd|li|mark|"
+    "ol|p|pre|q|s|samp|small|span|strike|strong|sub|summary|sup|table|tbody|td|tfoot|th|thead|"
+    "tr|tt|u|ul|var"
+)
+_TAG_RE = re.compile(
+    r"</?(?:" + _TAG_NAMES + r")"
+    r"(?:\s+(?:[\w:-]+\s*=\s*(?:\"[^\"\n]*\"|'[^'\n]*'|[^\s\"'<>]+)|open|hidden))*"
+    r"\s*/?>",
+    re.I,
+)
+_MARKUP_RE = re.compile(r"[*_~]+|^[ \t]*(?:>[ \t]*)+|^[ \t]{0,3}#{1,6}(?=\s)", re.M)
 _HEADER_RE = re.compile(r"^\s{0,3}#{1,6}\s", re.M)
 
 VERDICT_GLYPHS = ("✅", "⚠️", "⚠", "❌", "⏳")
 NEED_YOU_RE = re.compile(r"\*\*Need you:\*\*", re.I)
 RISK_RE = re.compile(r"\*\*Risk:\*\*", re.I)
+# A label is bold: "**Plan:**", "**Risk: headline.**", "⚠️ **Risk:**", on any line.
+# An unformatted "Plan:" or a quoted "ERROR:" log line is not a label.
 PROTECTED_LABEL_RE = re.compile(
-    r"^\s*(?:⚠️?\s*)?(?:\*\*)?"
+    r"^\s*(?:⚠️?\s*)?\*\*"
     r"(?:Risk|Plan|Review|Error|Security|Migration|Destructive|Audit|Debug)"
-    r":(?:\*\*)?",
+    r":",
     re.M | re.I,
 )
 _STAGE_RES = {
     "verbose": re.compile(r"^\s*/v(?:\s|$)|\[stage:verbose\]"),
     "ultra": re.compile(r"^\s*/u(?:\s|$)|\[stage:ultra\]"),
 }
-# Quality signal: what the user's next prompt says about the previous reply.
-_FOLLOWUP_RES = {
-    "more": re.compile(
-        r"^\s*/v(?:\s|$)|\[stage:verbose\]|\b(?:more detail|more details|elaborate|explain (?:more|further|that|this|why)"
-        r"|what do you mean|go deeper|expand on|say more|i don'?t (?:understand|follow)|not clear|unclear)\b",
-        re.I,
-    ),
-    "shorter": re.compile(
-        r"^\s*/u(?:\s|$)|\[stage:ultra\]|\b(?:shorter|too long|tl;?dr|too verbose|more concise|less verbose)\b",
-        re.I,
-    ),
-}
+# Quality signal: only the explicit stages count. Phrases like "explain this" or
+# "shorter" are about the code at least as often as about the reply, so matching
+# them wrote a wrong number into the report; a sparse signal beats a noisy one.
+_FOLLOWUP_SIGNALS = {"verbose": "more", "ultra": "shorter"}
 
 
 # --- measurement -----------------------------------------------------------
@@ -85,15 +94,22 @@ _FOLLOWUP_RES = {
 def strip_literals(text: str) -> Tuple[str, int]:
     literal = 0
 
-    def take(m: "re.Match[str]") -> str:
+    def take(m: "re.Match[str]", repl: str = "\n") -> str:
         nonlocal literal
         literal += len(m.group(0))
-        return "\n"
+        return repl
+
+    def cells(m: "re.Match[str]") -> str:
+        # Pipes are scaffolding; the cell text is prose and stays in.
+        nonlocal literal
+        literal += m.group(0).count("|")
+        return m.group(0).replace("|", " ")
 
     out = _FENCE_RE.sub(take, text)
     out = _HTML_LITERAL_RE.sub(take, out)
-    out = _INLINE_CODE_RE.sub(take, out)
-    out = _TABLE_LINE_RE.sub(take, out)
+    out = _INLINE_CODE_RE.sub(lambda m: take(m, " "), out)  # a space keeps table rows whole
+    out = _TABLE_RULE_RE.sub(take, out)
+    out = _TABLE_LINE_RE.sub(cells, out)
     out = _URL_RE.sub(take, out)
     return out, literal
 
@@ -102,7 +118,7 @@ def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
     """Measure one reply. Pure; never raises on string input."""
     text = text or ""
     prose_raw, literal = strip_literals(text)
-    prose = " ".join(_MARKUP_RE.sub("", prose_raw).split())
+    prose = " ".join(_MARKUP_RE.sub("", _TAG_RE.sub("", prose_raw)).split())
     prof = (profile or ("protected" if PROTECTED_LABEL_RE.search(text) else "default")).lower()
     if prof not in BUDGETS:
         prof = "default"
@@ -300,7 +316,7 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
         _clear_stage(sid)
 
     row = last_row(sid)
-    signal = next((name for name, rx in _FOLLOWUP_RES.items() if rx.search(prompt)), None)
+    signal = _FOLLOWUP_SIGNALS.get(stage or "")
     if row and signal:
         _append({"ts": _now(), "session_id": sid, "kind": "followup", "reply_sha": row.get("sha"),
                  "reply_profile": row.get("profile"), "signal": signal})

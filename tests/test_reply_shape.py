@@ -97,22 +97,56 @@ def test_transcript_fallback_reads_final_reply(tmp_path):
 
 def test_followup_signal_is_logged_and_reported(tmp_path):
     run("stop", {"session_id": "s7", "last_assistant_message": "✅ **ok**"}, tmp_path, "nudge")
-    run("prompt", {"session_id": "s7", "prompt": "what do you mean by that?"}, tmp_path, "nudge")
+    run("prompt", {"session_id": "s7", "prompt": "/v what do you mean by that?"}, tmp_path, "nudge")
+    run("stop", {"session_id": "s7", "last_assistant_message": "✅ **ok, longer**"}, tmp_path, "nudge")
+    run("prompt", {"session_id": "s7", "prompt": "thanks"}, tmp_path, "nudge")
     run("stop", {"session_id": "s7", "last_assistant_message": LONG}, tmp_path, "nudge")
-    out = run("prompt", {"session_id": "s7", "prompt": "too long, tl;dr please"}, tmp_path, "nudge")
+    out = run("prompt", {"session_id": "s7", "prompt": "/u tl;dr please"}, tmp_path, "nudge")
     assert "over by" in out  # followup rows must not hide the reply row from the nudge
     env = {**os.environ, "REPLY_SHAPE_DIR": str(tmp_path)}
     rep = subprocess.run([sys.executable, str(SCRIPT), "report", "--json"], capture_output=True, env=env, timeout=30)
     groups = json.loads(rep.stdout)["groups"]
-    assert groups["all"]["n"] == 2
-    assert groups["all"]["asked_more_pct"] == 50 and groups["all"]["asked_shorter_pct"] == 50
+    assert groups["all"]["n"] == 3
+    assert groups["all"]["asked_more_pct"] == 33 and groups["all"]["asked_shorter_pct"] == 33
 
 
 def test_plain_prompt_logs_no_signal(tmp_path):
+    # Issue #3: requests about the code are not feedback about the reply.
     run("stop", {"session_id": "s8", "last_assistant_message": "✅ **ok**"}, tmp_path, "off")
-    run("prompt", {"session_id": "s8", "prompt": "now fix the parser"}, tmp_path, "off")
+    for prompt in ["now fix the parser", "explain this function", "make the loop shorter",
+                   "explain why the test fails", "can you elaborate on the retry path", "too long, tl;dr"]:
+        run("prompt", {"session_id": "s8", "prompt": prompt}, tmp_path, "off")
     rows = [json.loads(x) for x in (tmp_path / "reply_shape.jsonl").read_text("utf-8").splitlines()]
     assert not any(r.get("kind") == "followup" for r in rows)
+
+
+def test_table_cells_count_as_prose():
+    # Issue #1: pipes and the rule row are scaffolding, cell text is prose.
+    tbl = "Here is the answer.\n\n| step | what | why |\n|---|:---:|---|\n" + "".join(
+        f"| {i} | a fairly wordy cell describing step {i} | because the pipeline needs it |\n"
+        for i in range(1, 21))
+    shape = rs.measure(tbl)
+    assert shape["prose_chars"] > 1000 and not shape["ok"] and shape["has_table"]
+    small = rs.measure("| file | line |\n|---|---|\n| `src/a.py` | `12` |")
+    assert small["prose_chars"] == len("file line") and "|" not in rs.strip_literals("| a |")[0]
+
+
+def test_label_must_be_bold():
+    # Issue #2: an unformatted word, or a quoted log line, does not buy 900.
+    for text in ["Plan: do the thing.", "plan: lowercase too.", "Risk: none.",
+                 "✅ **Done.**\nThe server said:\nERROR: bind failed"]:
+        assert rs.measure(text)["budget"] == 400, text
+    for text in ["**Plan:** do it", "⚠️ **Risk:** data loss", "✅ **Done.**\n\n⚠️ **Risk: live data touched.** Detail.",
+                 "**error:** lower case is fine"]:
+        assert rs.measure(text)["budget"] == 900, text
+
+
+def test_angle_brackets_in_prose_count():
+    # Issue #4: only real HTML tags are markup.
+    for text in ["if a <b and c> d then", "compare x <y and y> z", "use Dict<str, int> here", "a > b and c > d"]:
+        assert rs.measure(text)["prose_chars"] == len(text), text
+    assert rs.measure('<div class="x">hi</div> <br/> </span><details open>ok')["prose_chars"] == len("hi ok")
+    assert rs.measure("> quoted\n## Heading\nissue #4")["prose_chars"] == len("quoted Heading issue #4")
 
 
 def test_protected_feedback_points_to_file_or_v():

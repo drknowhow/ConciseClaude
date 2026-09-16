@@ -8,8 +8,9 @@ is in `VERSION`.
 If `~/.claude/hooks/reply_shape.py` already exists, this is an upgrade: run
 `<PYTHON> ~/.claude/hooks/reply_shape.py version`, read the CHANGELOG entries
 between that version and `VERSION`, and tell the user what changes before
-replacing anything. A major version bump means the settings wiring changed,
-so redo step 6.
+replacing anything. A major version bump means replies score differently or
+the settings wiring changed; its CHANGELOG entry says which. Redo step 6 only
+when the entry says the wiring changed.
 
 Merge into the user's existing configuration. Never overwrite their
 `settings.json`, `CLAUDE.md`, or a same-named file without showing the conflict
