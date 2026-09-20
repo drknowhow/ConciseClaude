@@ -1,8 +1,8 @@
 # ConciseClaude
 
-A reply system for Claude Code: shorter, more direct answers with the same
-depth of work behind them. It changes how much Claude **says**, not how much it
-reads, thinks, or verifies.
+A reply and code-shape system for Claude Code: shorter, more direct answers,
+and code without narration, with the same depth of work behind both. It
+changes how much Claude **says**, not how much it reads, thinks, or verifies.
 
 Version: see [`VERSION`](VERSION) · changes: [`CHANGELOG.md`](CHANGELOG.md) · license: Apache-2.0
 
@@ -21,6 +21,7 @@ changelog before replacing anything.
 | Rules | `output-styles/concise.md` | The only copy of the rules: budget, reply grammar, cut list, never-cut list. Loads into the system prompt. |
 | Pointer | `claude-md-snippet.md` | Three lines for `~/.claude/CLAUDE.md` so every surface finds the rules and nobody writes a second set. |
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. |
+| Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/v <ask>` lifts the budget for one reply. `/u <ask>` squeezes it to 150 chars. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
 | Version | `VERSION`, `CHANGELOG.md` | One canonical version; `tests/test_version_sync.py` fails if any copy drifts. |
@@ -36,6 +37,19 @@ Result line first with a status glyph. Detail only if it changes your next
 move. Literals verbatim. **Need you:** last, and only when Claude is blocked on
 you. Security, destructive commands, errors, and plans get 900 chars, but only
 under a visible label like **Risk:** or **Plan:**.
+
+## What code looks like
+The same rule set covers the code Claude writes: a reviewer has about ten
+minutes per commit. A comment states the invariant the next lines cannot
+show; dates, PR numbers and probe results go in the commit body, which gets
+eight lines. Docstrings are contracts, not histories. Guards sit at real
+boundaries and never swallow. Nothing ships with zero non-test callers.
+
+```
+python ~/.claude/hooks/diff_shape.py install          # in each repo: writes .git/hooks/pre-commit and commit-msg
+python ~/.claude/hooks/diff_shape.py report --days 7  # commits measured, median comment share, findings by code
+python ~/.claude/hooks/diff_shape.py mode block       # off | warn (default) | block on fail-class findings
+```
 
 ## Why it's built this way
 Each point comes from running an earlier version of this system.
@@ -55,6 +69,12 @@ Each point comes from running an earlier version of this system.
 - **Nudge before block.** Block mode makes Claude rewrite, but the rewrite lands
   *under* the long reply (rendered text can't be retracted), so you read both.
   Nudge only shapes the next reply.
+- **Code rules by content, not length.** An audit of thirty Claude-authored
+  commits (`docs/code-verbosity-audit-2026-09-20.md`) found 15–28% of added
+  lines removable in three of four repos, almost all comments and docstrings,
+  and eleven robustness defects under the prose. Length caps get gamed into
+  denser code, so the diff meter fails on the defect signals (swallowed
+  exceptions, forensic comments, dividers) and only warns on ratios.
 
 ## Evidence
 About 2,200 measured replies over two weeks on the original setup:

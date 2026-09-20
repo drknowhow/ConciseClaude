@@ -9,6 +9,31 @@ fails if the hook, the output style marker, or this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 3.0.0 (2026-09-20)
+Major because the rules now cover the code Claude writes, and a second meter
+ships. The Claude Code hook wiring is unchanged; step 6 is not needed. Install
+step 5b adds the new git hooks per repo.
+- **Code and Commits sections in `concise.md`.** One reason once, at the layer
+  that owns it; contract-only docstrings; no dividers, shouting, or restating
+  comments; tests that can fail; guards at real boundaries only; nothing with
+  zero non-test callers; one behaviour per commit; commit body ≤8 lines. The
+  Never-cut carve-out for "file contents and commit messages" now covers only
+  literals, since it was read as licence for essays in code.
+- **`hooks/diff_shape.py`.** A `pre-commit` and `commit-msg` meter. Fail-class:
+  swallowed `except`, dividers, dates or `#NNN` in comments, comment share
+  over 25% of added lines, headed commit bodies. Warn-class: docstring longer
+  than its body, module docstring over 10 lines, catch-all that never
+  re-raises, shouting, comment share over 15%, more than 800 changed lines or
+  8 files, subject over 72, body over 8 lines, verification transcripts.
+  `warn` mode (default) never refuses a commit; `block` refuses on fail-class.
+  Not measured yet: zero-caller helpers and cloned sibling modules.
+- **Evidence:** `docs/code-verbosity-audit-2026-09-20.md`. Thirty
+  Claude-authored commits across four repos, read by three subagents and four
+  federated agents. 15–28% of added lines were removable in three repos, over
+  half of it comments and docstrings, and eleven robustness defects were
+  found under the prose. Thresholds follow published comment-density means
+  (about 18–19%) rather than a stricter guess.
+
 ## 2.0.0 (2026-09-16)
 Major because replies now score differently. The hook wiring is unchanged, so
 an upgrade only replaces `reply_shape.py` and `concise.md`; step 6 is not needed.

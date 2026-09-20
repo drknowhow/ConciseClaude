@@ -9,10 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 def versions():
     canonical = (ROOT / "VERSION").read_text("utf-8").strip()
     hook = re.search(r'^__version__ = "([^"]+)"', (ROOT / "hooks" / "reply_shape.py").read_text("utf-8"), re.M)
+    diff_hook = re.search(r'^__version__ = "([^"]+)"', (ROOT / "hooks" / "diff_shape.py").read_text("utf-8"), re.M)
     style = re.search(r"<!-- ConciseClaude ([^ ]+) -->", (ROOT / "output-styles" / "concise.md").read_text("utf-8"))
     changelog = re.search(r"^## \[?([0-9][^\]\s]*)", (ROOT / "CHANGELOG.md").read_text("utf-8"), re.M)
     return canonical, {
         "hooks/reply_shape.py __version__": hook and hook.group(1),
+        "hooks/diff_shape.py __version__": diff_hook and diff_hook.group(1),
         "output-styles/concise.md marker": style and style.group(1),
         "CHANGELOG.md newest entry": changelog and changelog.group(1),
     }

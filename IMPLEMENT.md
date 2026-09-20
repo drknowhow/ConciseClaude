@@ -8,9 +8,9 @@ is in `VERSION`.
 If `~/.claude/hooks/reply_shape.py` already exists, this is an upgrade: run
 `<PYTHON> ~/.claude/hooks/reply_shape.py version`, read the CHANGELOG entries
 between that version and `VERSION`, and tell the user what changes before
-replacing anything. A major version bump means replies score differently or
-the settings wiring changed; its CHANGELOG entry says which. Redo step 6 only
-when the entry says the wiring changed.
+replacing anything. A major version bump means replies or diffs score
+differently or the settings wiring changed; its CHANGELOG entry says which.
+Redo step 6 only when the entry says the wiring changed.
 
 Merge into the user's existing configuration. Never overwrite their
 `settings.json`, `CLAUDE.md`, or a same-named file without showing the conflict
@@ -41,8 +41,20 @@ and asking.
      calls it fails silently. `py -3 -c "import sys; print(sys.executable)"`
      gives a real path.
    - Run the tests with that interpreter from this folder:
-     `<PYTHON> tests/test_reply_shape.py` and `<PYTHON> tests/test_version_sync.py`.
-     All must pass before continuing.
+     `<PYTHON> tests/test_reply_shape.py`, `<PYTHON> tests/test_diff_shape.py`,
+     and `<PYTHON> tests/test_version_sync.py`. All must pass before continuing.
+
+5b. **Diff meter**
+   - Copy `hooks/diff_shape.py` → `~/.claude/hooks/diff_shape.py`.
+   - It is a git hook, not a Claude Code hook, so it is installed per
+     repository: in each repo the user names, run
+     `<PYTHON> ~/.claude/hooks/diff_shape.py install --repo <REPO>`. It writes
+     `.git/hooks/pre-commit` and `.git/hooks/commit-msg`, and refuses to
+     overwrite a hook it did not write; if one exists, show the user the one
+     line to add to it. Ask which repos before writing anything.
+   - Default mode is `warn`: findings print, commits proceed. Leave it there
+     for two weeks, then let the user decide on `block` from
+     `diff_shape.py report`.
 
 6. **Wire settings.** Merge `settings-hooks.json` into `~/.claude/settings.json`:
    - Set `"outputStyle": "Concise"`. If a different style is already set, ask
@@ -80,5 +92,6 @@ and asking.
 
 ## Uninstall
 Remove the two hook entries and `outputStyle` from `settings.json`. Delete the
-copied files and `~/.claude/reply_shape/`. Remove the snippet from
-`~/.claude/CLAUDE.md`.
+copied files, `~/.claude/reply_shape/`, and `~/.claude/diff_shape/`. In each
+repo, delete the `.git/hooks/pre-commit` and `commit-msg` files that mention
+`diff-shape`. Remove the snippet from `~/.claude/CLAUDE.md`.
