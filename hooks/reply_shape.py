@@ -1,22 +1,12 @@
 #!/usr/bin/env python3
 """Reply shape: measure the prose in each Claude Code reply and feed overage back.
 
-Hooks (wire both in ~/.claude/settings.json):
-  reply_shape.py stop     Stop hook. Measures the final reply and appends one JSONL
-                          row. In block mode, refuses the stop once when over budget.
-  reply_shape.py prompt   UserPromptSubmit hook. Records a /v or /u stage for the
-                          coming reply, logs that stage against the previous
-                          reply (the quality signal), and in nudge/block mode
-                          tells the model its previous reply was over budget.
-Tools:
-  reply_shape.py report [--days N] [--json]
-  reply_shape.py mode [off|nudge|block]
-  reply_shape.py measure [--profile P] < reply.txt
-  reply_shape.py version
+  reply_shape.py stop     Stop hook: measures the final reply, logs one row; block mode refuses once.
+  reply_shape.py prompt   UserPromptSubmit hook: records /v or /u, logs the quality signal, nudges.
+  reply_shape.py report [--days N] [--json] | mode [off|nudge|block] | measure [--profile P] | version
 
-Stdlib only, Python 3.8+. A hook must never cost a turn: hook failures exit 0.
-State: ~/.claude/reply_shape/ (override with REPLY_SHAPE_DIR). The log stores
-sizes and a short hash per reply, never reply text.
+Stdlib only, Python 3.8+. Hook failures exit 0, so a hook never costs a turn.
+State: ~/.claude/reply_shape/ (REPLY_SHAPE_DIR); the log stores sizes and a hash per reply, never text.
 """
 from __future__ import annotations
 
@@ -31,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "3.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "3.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -83,13 +73,10 @@ _STAGE_RES = {
     "verbose": re.compile(r"^\s*/v(?:\s|$)|\[stage:verbose\]"),
     "ultra": re.compile(r"^\s*/u(?:\s|$)|\[stage:ultra\]"),
 }
-# Quality signal: only the explicit stages count. Phrases like "explain this" or
-# "shorter" are about the code at least as often as about the reply, so matching
-# them wrote a wrong number into the report; a sparse signal beats a noisy one.
+# Only the explicit stages count: "explain this" or "shorter" refer to the code
+# at least as often as to the reply.
 _FOLLOWUP_SIGNALS = {"verbose": "more", "ultra": "shorter"}
 
-
-# --- measurement -----------------------------------------------------------
 
 def strip_literals(text: str) -> Tuple[str, int]:
     literal = 0
@@ -162,8 +149,6 @@ def feedback(row: Dict[str, Any], kind: str) -> str:
     return lead + hint
 
 
-# --- state -----------------------------------------------------------------
-
 def state_dir() -> Path:
     return Path(os.environ.get("REPLY_SHAPE_DIR") or (Path.home() / ".claude" / "reply_shape")).expanduser()
 
@@ -181,7 +166,7 @@ def get_mode() -> str:
         return DEFAULT_MODE
     try:
         mode = str(json.loads(cfg.read_text("utf-8")).get("mode", "")).strip().lower()
-    except Exception:
+    except (OSError, ValueError, AttributeError):
         return "off"  # a broken switch fails toward silence, never toward blocking
     return mode if mode in MODES else "off"
 
@@ -244,10 +229,7 @@ def _read_stage(sid: str) -> Optional[str]:
 
 
 def _clear_stage(sid: str) -> None:
-    try:
-        _stage_file(sid).unlink()
-    except OSError:
-        pass
+    _stage_file(sid).unlink(missing_ok=True)
 
 
 def final_reply_from_transcript(path: str) -> str:
@@ -273,8 +255,6 @@ def final_reply_from_transcript(path: str) -> str:
             parts.append("\n".join(t for t in texts if t))
     return "\n\n".join(p for p in reversed(parts) if p.strip())
 
-
-# --- hooks -----------------------------------------------------------------
 
 def cmd_stop(payload: Dict[str, Any]) -> None:
     sid = str(payload.get("session_id") or "")
@@ -326,11 +306,8 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
     if not row or row.get("ok", True):
         return
     marker = state_dir() / "nudged" / _safe(sid)
-    try:
-        if marker.read_text("utf-8").strip() == row.get("sha"):
-            return
-    except OSError:
-        pass
+    if marker.exists() and marker.read_text("utf-8").strip() == row.get("sha"):
+        return
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.write_text(str(row.get("sha", "")), "utf-8")
     print(json.dumps({
@@ -340,8 +317,6 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
         }
     }))
 
-
-# --- tools -----------------------------------------------------------------
 
 def _pct(part: int, whole: int) -> int:
     return round(100 * part / whole) if whole else 0
@@ -365,21 +340,18 @@ def cmd_report(days: float, as_json: bool) -> None:
     cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - days * 86400))
     rows: List[Dict[str, Any]] = []
     followups: Dict[str, set] = {}
-    try:
-        with _log_path().open("r", encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                try:
-                    row = json.loads(line)
-                except ValueError:
-                    continue
-                if not isinstance(row, dict) or str(row.get("ts", "")) < cutoff:
-                    continue
-                if row.get("kind") == "followup":
-                    followups.setdefault(str(row.get("reply_sha")), set()).add(row.get("signal"))
-                elif "prose_chars" in row and not row.get("revision"):
-                    rows.append(row)
-    except OSError:
-        pass
+    lines = _log_path().read_text("utf-8", errors="replace").splitlines() if _log_path().exists() else []
+    for line in lines:
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(row, dict) or str(row.get("ts", "")) < cutoff:
+            continue
+        if row.get("kind") == "followup":
+            followups.setdefault(str(row.get("reply_sha")), set()).add(row.get("signal"))
+        elif "prose_chars" in row and not row.get("revision"):
+            rows.append(row)
     groups = {"all": rows}
     for prof in BUDGETS:
         subset = [r for r in rows if r.get("profile") == prof]

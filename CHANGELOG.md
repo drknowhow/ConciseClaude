@@ -9,6 +9,17 @@ fails if the hook, the output style marker, or this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 3.1.0 (2026-09-20)
+- **`diff_shape.py scan [--ref]`** runs a whole tree through the meter, for
+  seeing what a repo looks like before the hooks go in.
+- **`except Specific: pass` is warn-class** (`silent-except`). Only a bare or
+  catch-all handler that swallows is fail-class (`swallowed-except`). A
+  handler that `continue`s past a bad record is neither.
+- **The repo follows its own rules.** `reply_shape.py` loses four section
+  dividers, a 20-line module docstring, a catch-all in `get_mode`, and two
+  `except OSError: pass`; `diff_shape.py` loses its own dividers. `scan` on
+  this tree reports no findings.
+
 ## 3.0.0 (2026-09-20)
 Major because the rules now cover the code Claude writes, and a second meter
 ships. The Claude Code hook wiring is unchanged; step 6 is not needed. Install

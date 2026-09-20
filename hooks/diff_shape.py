@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 """Diff shape: measure the prose and the hazards in a staged diff and its commit message.
 
-Git hooks (install per repo with `diff_shape.py install`):
-  diff_shape.py pre-commit          reads `git diff --cached`, prints findings, logs one row
-  diff_shape.py commit-msg <file>   checks the message shape
-Tools:
-  diff_shape.py measure [--msg] < diff_or_message
-  diff_shape.py install [--repo DIR]
-  diff_shape.py mode [off|warn|block]
-  diff_shape.py report [--days N] [--json]
-  diff_shape.py version
+  diff_shape.py pre-commit | commit-msg <file>   git hooks; `install [--repo DIR]` writes them
+  diff_shape.py measure [--msg] < text           one diff or message, as JSON
+  diff_shape.py scan [--ref HEAD]                the whole tree at a ref, as one diff
+  diff_shape.py mode [off|warn|block] | report [--days N] [--json] | version
 
-Stdlib only, Python 3.8+. warn mode (default) never fails a commit; block mode fails
-only on `fail`-class findings. State: ~/.claude/diff_shape/ (DIFF_SHAPE_DIR). The log
-stores counts, never code.
+Stdlib only, Python 3.8+. warn mode (default) never fails a commit; block fails on fail-class only.
+State: ~/.claude/diff_shape/ (DIFF_SHAPE_DIR); the log stores counts, never code.
 """
 from __future__ import annotations
 
@@ -29,7 +23,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-__version__ = "3.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "3.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 MODES = ("off", "warn", "block")
 DEFAULT_MODE = "warn"
@@ -144,11 +138,13 @@ def _python_findings(path: str, source: str, added: Set[int]) -> Tuple[List[Dict
                                     f"{node.name}: {ds}-line docstring, {body}-line body"))
         elif isinstance(node, ast.ExceptHandler) and node.lineno in added:
             stmts = node.body
-            trivial = all(isinstance(s, (ast.Pass, ast.Continue)) or
-                          (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant)) for s in stmts)
+            trivial = all(isinstance(s, ast.Pass) or (isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant))
+                          for s in stmts)
             broad = node.type is None or (isinstance(node.type, ast.Name) and node.type.id in ("Exception", "BaseException"))
-            if trivial:
-                out.append(_finding("fail", "swallowed-except", path, node.lineno, "handler body is only pass"))
+            if trivial and broad:
+                out.append(_finding("fail", "swallowed-except", path, node.lineno, "catch-all whose body is only pass"))
+            elif trivial:
+                out.append(_finding("warn", "silent-except", path, node.lineno, "handler body is only pass"))
             elif broad and not any(isinstance(s, ast.Raise) for s in ast.walk(node)):
                 out.append(_finding("warn", "broad-except", path, node.lineno, "catch-all that never re-raises"))
     return out, doc_lines
@@ -278,11 +274,22 @@ def _git(*args: str, cwd: Optional[str] = None) -> str:
                           errors="replace", check=True).stdout
 
 
-def _staged_blob(path: str) -> Optional[str]:
-    try:
-        return _git("show", f":{path}")
-    except subprocess.CalledProcessError:
-        return None
+def _blob_at(ref: str) -> Callable[[str], Optional[str]]:
+    def read(path: str) -> Optional[str]:
+        try:
+            return _git("show", f"{ref}:{path}")
+        except subprocess.CalledProcessError:
+            return None
+    return read
+
+
+def cmd_scan(ref: str) -> None:
+    empty_tree = _git("hash-object", "-t", "tree", os.devnull).strip()
+    diff = _git("diff", empty_tree, ref, "--no-color", "-U0")
+    result = analyze_diff(diff, _blob_at(ref))
+    result["findings"] = [f for f in result["findings"] if f["code"] != "large-commit"]
+    _print(result, f"tree at {ref}", "scan")
+    print(json.dumps({k: v for k, v in result.items() if k != "findings"}))
 
 
 def _print(result: Dict[str, Any], kind: str, mode: str) -> None:
@@ -290,8 +297,8 @@ def _print(result: Dict[str, Any], kind: str, mode: str) -> None:
     if not fs:
         return
     fails = sum(1 for f in fs if f["level"] == "fail")
-    verdict = "commit refused" if (mode == "block" and fails) else "commit proceeds"
-    sys.stderr.write(f"[diff-shape] {kind}: {len(fs)} finding(s), {fails} fail-class ({mode} mode; {verdict})\n")
+    verdict = mode if mode == "scan" else f"{mode} mode; " + ("commit refused" if (mode == "block" and fails) else "commit proceeds")
+    sys.stderr.write(f"[diff-shape] {kind}: {len(fs)} finding(s), {fails} fail-class ({verdict})\n")
     for f in fs:
         where = f"{f['path']}:{f['line']}" if f["path"] and f["line"] else (f["path"] or (f"line {f['line']}" if f["line"] else ""))
         sys.stderr.write(f"  {f['level']:<4} {f['code']:<20} {where:<28} {f['text']}\n")
@@ -302,7 +309,7 @@ def cmd_pre_commit() -> int:
     if mode == "off":
         return 0
     diff = _git("diff", "--cached", "--no-color", "--no-ext-diff", "-U0")
-    result = analyze_diff(diff, _staged_blob)
+    result = analyze_diff(diff, _blob_at(""))
     _print(result, "staged diff", mode)
     counts: Dict[str, int] = {}
     for f in result["findings"]:
@@ -381,6 +388,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     cm.add_argument("path")
     ms = sub.add_parser("measure")
     ms.add_argument("--msg", action="store_true")
+    sc = sub.add_parser("scan")
+    sc.add_argument("--ref", default="HEAD")
     ins = sub.add_parser("install")
     ins.add_argument("--repo")
     md = sub.add_parser("mode")
@@ -400,6 +409,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.cmd == "measure":
         text = sys.stdin.buffer.read().decode("utf-8", "replace")
         print(json.dumps(analyze_message(text) if args.msg else analyze_diff(text), indent=2))
+    elif args.cmd == "scan":
+        cmd_scan(args.ref)
     elif args.cmd == "install":
         return cmd_install(args.repo)
     elif args.cmd == "mode":

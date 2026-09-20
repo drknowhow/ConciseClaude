@@ -44,6 +44,12 @@ def test_python_except_and_docstring_checks():
     assert codes(r) == ["docstring-over-body", "swallowed-except"]
 
 
+def test_specific_except_pass_only_warns():
+    source = "def f():\n    try:\n        run()\n    except OSError:\n        pass\n"
+    r = ds.analyze_diff(diff("m.py", source.splitlines()), blob_for=lambda p: source)
+    assert codes(r) == ["silent-except"] and r["ok"]
+
+
 def test_unchanged_python_nodes_are_not_reported():
     source = "def old():\n    try:\n        run()\n    except Exception:\n        pass\n\nNEW = 1\n"
     r = ds.analyze_diff(diff("m.py", ["NEW = 1"], start=7), blob_for=lambda p: source)
@@ -105,6 +111,9 @@ def test_hooks_in_a_real_repo(tmp_path):
     m = subprocess.run([sys.executable, str(SCRIPT), "commit-msg", str(msg)], cwd=repo, env={**env, "DIFF_SHAPE_MODE": "block"},
                        capture_output=True, text=True)
     assert m.returncode == 1 and "headed-section" in m.stderr
+    _git("commit", "-q", "-m", "x", cwd=repo)
+    scan = subprocess.run([sys.executable, str(SCRIPT), "scan"], cwd=repo, env=env, capture_output=True, text=True)
+    assert scan.returncode == 0 and "divider" in scan.stderr and '"files": 1' in scan.stdout
     ins = subprocess.run([sys.executable, str(SCRIPT), "install", "--repo", str(repo)], capture_output=True, text=True, env=env)
     assert ins.returncode == 0, ins.stderr
     for name in ("pre-commit", "commit-msg"):

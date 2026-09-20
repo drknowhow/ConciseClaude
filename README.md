@@ -46,7 +46,7 @@ eight lines. Docstrings are contracts, not histories. Guards sit at real
 boundaries and never swallow. Nothing ships with zero non-test callers.
 
 ```
-python ~/.claude/hooks/diff_shape.py install          # in each repo: writes .git/hooks/pre-commit and commit-msg
+python ~/.claude/hooks/diff_shape.py scan             # what the meter says about the current tree, before installing\npython ~/.claude/hooks/diff_shape.py install          # in each repo: writes .git/hooks/pre-commit and commit-msg
 python ~/.claude/hooks/diff_shape.py report --days 7  # commits measured, median comment share, findings by code
 python ~/.claude/hooks/diff_shape.py mode block       # off | warn (default) | block on fail-class findings
 ```
