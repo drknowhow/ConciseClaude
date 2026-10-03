@@ -122,6 +122,24 @@ def test_hooks_in_a_real_repo(tmp_path):
     assert '"diffs": 2' in rep.stdout
 
 
+def test_install_from_plugin_cache_points_shims_at_a_stable_copy(tmp_path):
+    if not shutil.which("git"):
+        return
+    cached = tmp_path / "plugins" / "cache" / "conciseclaude" / "9.9.9" / "hooks" / "diff_shape.py"
+    cached.parent.mkdir(parents=True)
+    shutil.copyfile(SCRIPT, cached)
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git("init", "-q", cwd=repo)
+    env = {**os.environ, "CLAUDE_CONFIG_DIR": str(tmp_path / "cfg"), "DIFF_SHAPE_DIR": str(tmp_path / "state")}
+    ins = subprocess.run([sys.executable, str(cached), "install", "--repo", str(repo)], capture_output=True, text=True, env=env)
+    assert ins.returncode == 0, ins.stderr
+    stable = tmp_path / "cfg" / "conciseclaude" / "diff_shape.py"
+    assert stable.read_bytes() == SCRIPT.read_bytes()
+    shim = (repo / ".git" / "hooks" / "pre-commit").read_text("utf-8")
+    assert stable.as_posix() in shim and "plugins/cache" not in shim
+
+
 def test_hook_never_fails_outside_a_repo(tmp_path):
     env = {**os.environ, "DIFF_SHAPE_DIR": str(tmp_path)}
     proc = subprocess.run([sys.executable, str(SCRIPT), "pre-commit"], cwd=tmp_path, env=env, capture_output=True, text=True)
