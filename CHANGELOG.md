@@ -23,7 +23,8 @@ from 3.x must be removed first, or every reply is metered twice; see
   uses the first real Python 3.8+ (`py -3`, `python3`, `python`) and fails open.
 - **No CLAUDE.md edit.** A SessionStart hook prints the rules pointer instead.
 - **Namespaced commands.** `/conciseclaude:v`, `/conciseclaude:u`,
-  `/conciseclaude:diff-hooks` (new: installs the git diff meter), and the
+  `/conciseclaude:diff-hooks` (new: installs the git diff meter),
+  `/conciseclaude:meter` (new: report and mode for both meters), and the
   `conciseclaude:human-prose` skill. The meter scores both `/u` and
   `/conciseclaude:u` as the ultra stage.
 - **Diff meter shims survive upgrades.** Installed from the plugin cache, the

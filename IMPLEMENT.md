@@ -1,5 +1,11 @@
 # Implement ConciseClaude (instructions for Claude Code)
 
+This is the manual install, for machines where Claude Code plugins are
+blocked. If plugins work, stop and tell the user to use the plugin install in
+`README.md` instead. If the `conciseclaude` plugin is already enabled
+(`claude plugin list`), don't install this as well: every reply would be
+metered twice.
+
 Install this reply system at **user scope** (`~/.claude/`, on Windows
 `%USERPROFILE%\.claude\`) so it applies in every project. Read `README.md`,
 `CHANGELOG.md`, and every file in this folder first. The version being installed
