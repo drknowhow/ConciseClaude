@@ -1,4 +1,5 @@
 """Every place that states the version must agree with VERSION. Run: python tests/test_version_sync.py"""
+import json
 import re
 import sys
 from pathlib import Path
@@ -12,7 +13,12 @@ def versions():
     diff_hook = re.search(r'^__version__ = "([^"]+)"', (ROOT / "hooks" / "diff_shape.py").read_text("utf-8"), re.M)
     style = re.search(r"<!-- ConciseClaude ([^ ]+) -->", (ROOT / "output-styles" / "concise.md").read_text("utf-8"))
     changelog = re.search(r"^## \[?([0-9][^\]\s]*)", (ROOT / "CHANGELOG.md").read_text("utf-8"), re.M)
+    plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text("utf-8")).get("version")
+    marketplace = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text("utf-8"))
     return canonical, {
+        ".claude-plugin/plugin.json version": plugin,
+        # plugin.json wins at install time, so a second copy here would only drift.
+        "marketplace.json entry version (must be absent)": canonical if "version" not in marketplace["plugins"][0] else "set",
         "hooks/reply_shape.py __version__": hook and hook.group(1),
         "hooks/diff_shape.py __version__": diff_hook and diff_hook.group(1),
         "output-styles/concise.md marker": style and style.group(1),

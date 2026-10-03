@@ -1,13 +1,34 @@
 # Changelog
 
 Versions follow semver. `VERSION` is canonical; `tests/test_version_sync.py`
-fails if the hook, the output style marker, or this file disagree with it.
+fails if the hooks, the output style marker, `.claude-plugin/plugin.json`, or
+this file disagree with it.
 
 - **Major:** a rule or budget change that makes existing replies score
   differently, or a settings/hook wiring change that needs reinstalling.
 - **Minor:** new rules, report columns, or commands; adding or removing an
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
+
+## 4.0.0 (2026-10-03)
+Wiring change: ConciseClaude installs as a Claude Code plugin. A manual install
+from 3.x must be removed first, or every reply is metered twice; see
+"Moving from a manual install" in the README.
+- **Plugin.** `claude plugin marketplace add drknowhow/ConciseClaude`, then
+  `claude plugin install conciseclaude@conciseclaude`. Upgrades are
+  `claude plugin update`.
+- **The style is forced.** It is on in every session while the plugin is
+  enabled, even over an explicit `outputStyle`. Disabling the plugin turns it off.
+- **No interpreter path in settings.** Hooks run through `hooks/run.sh`, which
+  uses the first real Python 3.8+ (`py -3`, `python3`, `python`) and fails open.
+- **No CLAUDE.md edit.** A SessionStart hook prints the rules pointer instead.
+- **Namespaced commands.** `/conciseclaude:v`, `/conciseclaude:u`,
+  `/conciseclaude:diff-hooks` (new: installs the git diff meter), and the
+  `conciseclaude:human-prose` skill. The meter scores both `/u` and
+  `/conciseclaude:u` as the ultra stage.
+- **Diff meter shims survive upgrades.** Installed from the plugin cache, the
+  git hooks call a copy at `~/.claude/conciseclaude/diff_shape.py`, which the
+  SessionStart hook refreshes.
 
 ## 3.1.0 (2026-09-20)
 - **`diff_shape.py scan [--ref]`** runs a whole tree through the meter, for

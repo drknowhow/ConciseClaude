@@ -4,7 +4,7 @@ description: Answer first, fixed reply grammar, measured prose budget; code and 
 keep-coding-instructions: true
 force-for-plugin: true
 ---
-<!-- ConciseClaude 3.1.0 -->
+<!-- ConciseClaude 4.0.0 -->
 
 # Concise
 
