@@ -2,6 +2,7 @@
 name: Concise
 description: Answer first, fixed reply grammar, measured prose budget; code and commits without narration. Thinking and verification unchanged.
 keep-coding-instructions: true
+force-for-plugin: true
 ---
 <!-- ConciseClaude 3.1.0 -->
 
