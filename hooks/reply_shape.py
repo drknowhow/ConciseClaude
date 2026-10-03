@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "3.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "4.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -70,8 +70,8 @@ PROTECTED_LABEL_RE = re.compile(
     re.M | re.I,
 )
 _STAGE_RES = {
-    "verbose": re.compile(r"^\s*/v(?:\s|$)|\[stage:verbose\]"),
-    "ultra": re.compile(r"^\s*/u(?:\s|$)|\[stage:ultra\]"),
+    "verbose": re.compile(r"^\s*/(?:conciseclaude:)?v(?:\s|$)|\[stage:verbose\]"),
+    "ultra": re.compile(r"^\s*/(?:conciseclaude:)?u(?:\s|$)|\[stage:ultra\]"),
 }
 # Only the explicit stages count: "explain this" or "shorter" refer to the code
 # at least as often as to the reply.

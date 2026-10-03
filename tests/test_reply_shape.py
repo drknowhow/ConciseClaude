@@ -83,6 +83,14 @@ def test_ultra_stage_tightens_budget(tmp_path):
     assert json.loads(out)["decision"] == "block"
 
 
+def test_plugin_namespaced_stages(tmp_path):
+    run("prompt", {"session_id": "s6p", "prompt": "/conciseclaude:u status?"}, tmp_path, "block")
+    out = run("stop", {"session_id": "s6p", "last_assistant_message": "word " * 40}, tmp_path, "block")
+    assert json.loads(out)["decision"] == "block"
+    run("prompt", {"session_id": "s6q", "prompt": "/conciseclaude:v explain"}, tmp_path, "block")
+    assert run("stop", {"session_id": "s6q", "last_assistant_message": LONG}, tmp_path, "block") == ""
+
+
 def test_transcript_fallback_reads_final_reply(tmp_path):
     events = [
         {"type": "user", "message": {"role": "user", "content": "hi"}},

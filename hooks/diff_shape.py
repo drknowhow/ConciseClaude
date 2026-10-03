@@ -16,6 +16,7 @@ import ast
 import json
 import os
 import re
+import shutil
 import statistics
 import subprocess
 import sys
@@ -23,7 +24,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-__version__ = "3.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "4.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 MODES = ("off", "warn", "block")
 DEFAULT_MODE = "warn"
@@ -334,13 +335,26 @@ def cmd_commit_msg(path: str) -> int:
 _SHIM = "#!/bin/sh\n# diff-shape (ConciseClaude): remove this file to uninstall.\n\"{py}\" \"{script}\" {cmd} \"$@\"\n"
 
 
+def stable_script() -> Path:
+    """Path a git shim should call. Inside a plugin cache, copies this file to
+    <CLAUDE_CONFIG_DIR or ~/.claude>/conciseclaude/diff_shape.py and returns that,
+    since the cache directory changes with every plugin version."""
+    here = Path(__file__).resolve()
+    if not {"plugins", "cache"} <= set(here.parts):
+        return here
+    target = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude") / "conciseclaude" / here.name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(here, target)
+    return target
+
+
 def cmd_install(repo: Optional[str]) -> int:
     top = repo or _git("rev-parse", "--show-toplevel").strip()
     hooks = Path(_git("rev-parse", "--git-path", "hooks", cwd=top).strip())
     if not hooks.is_absolute():
         hooks = Path(top) / hooks
     hooks.mkdir(parents=True, exist_ok=True)
-    py, script = Path(sys.executable).as_posix(), Path(__file__).resolve().as_posix()
+    py, script = Path(sys.executable).as_posix(), stable_script().as_posix()
     for name in ("pre-commit", "commit-msg"):
         target = hooks / name
         if target.exists() and "diff-shape" not in target.read_text("utf-8", errors="replace"):

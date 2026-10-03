@@ -7,22 +7,52 @@ changes how much Claude **says**, not how much it reads, thinks, or verifies.
 Version: see [`VERSION`](VERSION) · changes: [`CHANGELOG.md`](CHANGELOG.md) · license: Apache-2.0
 
 ## Install
-1. `git clone https://github.com/drknowhow/ConciseClaude.git`
-2. Open Claude Code in that folder and say: **"Read IMPLEMENT.md and implement it."**
-3. Start a new session. Output styles and hooks load at session start.
+```
+claude plugin marketplace add drknowhow/ConciseClaude
+claude plugin install conciseclaude@conciseclaude
+```
+Start a new session. The Concise style is on in every session while the plugin
+is enabled, even if you've chosen another output style. To turn it off, run
+`claude plugin disable conciseclaude@conciseclaude`. The hooks need Python 3.8+
+(`py -3`, `python3` or `python`) and `sh`, which Claude Code on Windows gets
+from Git Bash. Without Python the rules still apply; replies just aren't
+measured.
 
-**Upgrade:** `git pull`, then say the same thing. The install guide compares the
-installed version (`reply_shape.py version`) with `VERSION` and walks the
-changelog before replacing anything.
+**Upgrade:** `claude plugin update conciseclaude@conciseclaude`, then restart.
+
+**Diff meter:** in each repo you want measured, run `/conciseclaude:diff-hooks`.
+
+**No plugins?** If your organization blocks plugins or marketplaces, use the
+manual install: clone this repo, open Claude Code in it, and say **"Read
+IMPLEMENT.md and implement it."** A manual install doesn't force the style;
+it sets `outputStyle` in your settings instead.
+
+### Moving from a manual install (3.x)
+Remove the manual install before enabling the plugin. If you don't, every
+reply is metered twice and the rules load twice.
+1. In `~/.claude/settings.json`, delete the `Stop` and `UserPromptSubmit`
+   entries that run `reply_shape.py`, and `"outputStyle": "Concise"`.
+2. Delete `~/.claude/output-styles/concise.md`, `~/.claude/commands/v.md`,
+   `~/.claude/commands/u.md`, `~/.claude/skills/human-prose/` and
+   `~/.claude/hooks/reply_shape.py`.
+3. Delete the `## Replies` block from `~/.claude/CLAUDE.md`. The plugin prints
+   that pointer at session start.
+4. Keep `~/.claude/hooks/diff_shape.py` until you've rerun
+   `/conciseclaude:diff-hooks` in each repo that has the git hooks. The old
+   shims call that file.
+
+The reply log in `~/.claude/reply_shape/` stays where it is, so `report`
+history carries over.
 
 ## What's in it
 | Part | File | Job |
 |---|---|---|
 | Rules | `output-styles/concise.md` | The only copy of the rules: budget, reply grammar, cut list, never-cut list. Loads into the system prompt. |
-| Pointer | `claude-md-snippet.md` | Three lines for `~/.claude/CLAUDE.md` so every surface finds the rules and nobody writes a second set. |
-| Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. |
-| Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
-| One-turn stages | `commands/v.md`, `commands/u.md` | `/v <ask>` lifts the budget for one reply. `/u <ask>` squeezes it to 150 chars. |
+| Pointer | `hooks/session_start.sh` | Prints the rules pointer at session start, so subagents and other surfaces find the rules and nobody writes a second set. `claude-md-snippet.md` is the same text for manual installs. |
+| Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
+| Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
+| One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
+| Plugin | `.claude-plugin/`, `hooks/hooks.json` | Manifest, one-plugin marketplace, and hook wiring. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
 | Version | `VERSION`, `CHANGELOG.md` | One canonical version; `tests/test_version_sync.py` fails if any copy drifts. |
 | Benchmark | `bench/ab.py` | Token, cost and speed A/B of style on vs off, using headless Claude Code. Not installed. |
@@ -119,11 +149,15 @@ version reads the reply Claude Code hands the hook directly.
 
 ## Operating it
 ```
-python ~/.claude/hooks/reply_shape.py report --days 7   # median, p90, % over, asked_more, asked_shorter
-python ~/.claude/hooks/reply_shape.py mode block        # off | nudge (default) | block
+/conciseclaude:meter report --days 7        # median, p90, % over, asked_more, asked_shorter
+/conciseclaude:meter mode block             # off | nudge (default) | block
+/conciseclaude:meter diff report --days 7   # the diff meter's report
 ```
+A manual install runs the same thing as `python ~/.claude/hooks/reply_shape.py report --days 7`.
 - Budgets: the `BUDGETS` dict at the top of `reply_shape.py`.
-- Rules: edit `~/.claude/output-styles/concise.md`, nowhere else.
+- Rules: `output-styles/concise.md`, nowhere else. The plugin's copy is
+  replaced on every update, so change the rules in a fork or a PR here, not in
+  the plugin cache.
 - Privacy: the log stores sizes, flags, and a 12-character hash per reply. No
   reply text.
 - Off switch: `mode off` stops all feedback but keeps measuring. Removing the

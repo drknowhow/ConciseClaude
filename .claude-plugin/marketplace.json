@@ -1,0 +1,14 @@
+{
+  "name": "conciseclaude",
+  "owner": { "name": "drknowhow" },
+  "metadata": {
+    "description": "ConciseClaude: answer-first reply rules for Claude Code, with a reply meter."
+  },
+  "plugins": [
+    {
+      "name": "conciseclaude",
+      "source": "./",
+      "description": "Concise output style, reply meter, /v and /u one-turn stages, diff meter, human-prose skill."
+    }
+  ]
+}
