@@ -25,6 +25,7 @@ changelog before replacing anything.
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/v <ask>` lifts the budget for one reply. `/u <ask>` squeezes it to 150 chars. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
 | Version | `VERSION`, `CHANGELOG.md` | One canonical version; `tests/test_version_sync.py` fails if any copy drifts. |
+| Benchmark | `bench/ab.py` | Token, cost and speed A/B of style on vs off, using headless Claude Code. Not installed. |
 | Tests | `tests/` | `python tests/test_reply_shape.py` and `python tests/test_version_sync.py` (or pytest). |
 
 ## What a reply looks like
@@ -77,7 +78,24 @@ Each point comes from running an earlier version of this system.
   exceptions, forensic comments, dividers) and only warns on ratios.
 
 ## Evidence
-About 2,200 measured replies over two weeks on the original setup:
+**Controlled A/B, 2026-10-03** ([full write-up](docs/token-ab-2026-10-03.md)).
+Headless Claude Code on Sonnet, with the style plus hooks on versus the
+default style, in six-turn conversations run three times each:
+
+| Conversation | Output tokens | Cost | Wall time |
+|---|---|---|---|
+| Ops troubleshooting | −34% | −11% | −14% |
+| Schema design | −48% | −22% | −25% |
+| Coding with tools | +5% | +2% | −7% |
+| All | −28% | −9% | −16% |
+
+It saves the most in conversation. In coding, tool calls and file contents
+make up most of the output and aren't shortened, so the result there is a
+wash. In single cold calls, output fell 13–18% but cost came out even,
+because writing the prompt cache costs about as much as the shorter reply
+saves. Reproduce with `python bench/ab.py`.
+
+**Field log.** About 2,200 measured replies over two weeks on the original setup:
 
 | Phase | IDE median prose chars | IDE replies over budget | Chat-app replies over budget |
 |---|---|---|---|
