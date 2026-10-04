@@ -91,6 +91,27 @@ def test_plugin_namespaced_stages(tmp_path):
     assert run("stop", {"session_id": "s6q", "last_assistant_message": LONG}, tmp_path, "block") == ""
 
 
+def test_plain_ask_for_depth_lifts_budget_without_a_followup_signal(tmp_path):
+    run("stop", {"session_id": "s6d", "last_assistant_message": "✅ **ok**"}, tmp_path, "block")
+    run("prompt", {"session_id": "s6d", "prompt": "Explain TCP congestion control in depth."}, tmp_path, "block")
+    assert run("stop", {"session_id": "s6d", "last_assistant_message": LONG}, tmp_path, "block") == ""
+    rows = [json.loads(x) for x in (tmp_path / "reply_shape.jsonl").read_text("utf-8").splitlines()]
+    assert not any(r.get("kind") == "followup" for r in rows)
+
+
+def test_code_requests_do_not_lift_budget(tmp_path):
+    run("prompt", {"session_id": "s6e", "prompt": "explain this function"}, tmp_path, "block")
+    assert run("stop", {"session_id": "s6e", "last_assistant_message": LONG}, tmp_path, "block") != ""
+
+
+def test_report_states_label_share(tmp_path):
+    run("stop", {"session_id": "s6f", "last_assistant_message": "**Plan:** ship it"}, tmp_path, "off")
+    run("stop", {"session_id": "s6f", "last_assistant_message": "✅ **ok**"}, tmp_path, "off")
+    env = {**os.environ, "REPLY_SHAPE_DIR": str(tmp_path)}
+    rep = subprocess.run([sys.executable, str(SCRIPT), "report", "--json"], capture_output=True, env=env, timeout=30)
+    assert json.loads(rep.stdout)["label_pct"] == 50
+
+
 def test_transcript_fallback_reads_final_reply(tmp_path):
     events = [
         {"type": "user", "message": {"role": "user", "content": "hi"}},

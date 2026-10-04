@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "4.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "5.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -76,6 +76,13 @@ _STAGE_RES = {
 # Only the explicit stages count: "explain this" or "shorter" refer to the code
 # at least as often as to the reply.
 _FOLLOWUP_SIGNALS = {"verbose": "more", "ultra": "shorter"}
+# A plain ask for depth lifts the budget for that reply but is not a follow-up
+# signal, so it never counts as "asked for more" in the report.
+_DEPTH_RE = re.compile(
+    r"\b(?:in[- ]depth|in (?:full|great|more) detail|in detail|full picture|deep dive|comprehensive(?:ly)?|"
+    r"thorough(?:ly)?|as much (?:space|detail|room) as)\b",
+    re.I,
+)
 
 
 def strip_literals(text: str) -> Tuple[str, int]:
@@ -288,6 +295,9 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
         return
     prompt = str(payload.get("prompt") or "")
     stage = next((name for name, rx in _STAGE_RES.items() if rx.search(prompt)), None)
+    signal = _FOLLOWUP_SIGNALS.get(stage or "")
+    if not stage and _DEPTH_RE.search(prompt):
+        stage = "verbose"
     if stage:
         path = _stage_file(sid)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -296,7 +306,6 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
         _clear_stage(sid)
 
     row = last_row(sid)
-    signal = _FOLLOWUP_SIGNALS.get(stage or "")
     if row and signal:
         _append({"ts": _now(), "session_id": sid, "kind": "followup", "reply_sha": row.get("sha"),
                  "reply_profile": row.get("profile"), "signal": signal})
@@ -362,6 +371,7 @@ def cmd_report(days: float, as_json: bool) -> None:
         "last_reply_at": rows[-1]["ts"] if rows else None,
         "sessions": len({r.get("session_id") for r in rows}),
         "groups": {k: _summary(v, followups) for k, v in groups.items()},
+        "label_pct": _pct(len(groups.get("protected", [])), len(rows)),
     }
     if as_json:
         print(json.dumps(result, indent=2))
@@ -372,6 +382,7 @@ def cmd_report(days: float, as_json: bool) -> None:
     for name, s in result["groups"].items():
         print(f"{name:<10}{s['n']:>6}{s['median']:>8}{s['p90']:>7}{s['over_pct']:>6}%{s['verdict_first_pct']:>11}%"
               f"{s['asked_more_pct']:>11}%{s['asked_shorter_pct']:>14}%")
+    print(f"labeled (protected budget): {result['label_pct']}% of replies. Much above 20% means labels are buying room.")
 
 
 def main(argv: Optional[List[str]] = None) -> int:

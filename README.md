@@ -47,7 +47,8 @@ history carries over.
 ## What's in it
 | Part | File | Job |
 |---|---|---|
-| Rules | `output-styles/concise.md` | The only copy of the rules: budget, reply grammar, cut list, never-cut list. Loads into the system prompt. |
+| Rules | `output-styles/concise.md` | The only copy of the reply rules: budget, reply grammar, cut list, never-cut list. Loads into the system prompt. |
+| Code rules | `rules/code.md`, `hooks/code_rules.py` | Code, test and commit rules. A PostToolUse hook adds them on a session's first file edit, so chat-only sessions don't pay for them. |
 | Pointer | `hooks/session_start.sh` | Prints the rules pointer at session start, so subagents and other surfaces find the rules and nobody writes a second set. `claude-md-snippet.md` is the same text for manual installs. |
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
 | Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |

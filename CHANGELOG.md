@@ -10,6 +10,30 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 5.0.0 (2026-10-04)
+Rule and scoring changes from a 448-reply benchmark against blind checklist
+grading. The plugin picks them up with `claude plugin update`. Manual installs
+need step 2, 5 and 6 of IMPLEMENT.md again, for `rules/code.md` and the new
+`PostToolUse` hook.
+- **A plain ask for depth gets depth.** "In depth", "in detail", "the full
+  picture" or "as much space as you need" makes that reply verbose, in the
+  style and in the meter. The meter doesn't log it as "asked for more".
+  Before this, Sonnet answered such a request with about 900 output tokens
+  and a pointer to `/v`.
+- **Look-first steps are never cut.** The dry run, listing or backup that
+  goes with a destructive command stays in the reply, as does any
+  precondition the result depends on and every defect found in a review.
+- **Drafts are deliverables.** A PR description, email or doc the user will
+  send goes complete inside a fence, which the meter doesn't count.
+- **Labels are narrower.** A protected label requires that the user asked
+  for a plan, review, migration or debugging, or that the reply carries real
+  risk. An explanation, recommendation or how-to stays compact. `report`
+  now shows the share of labeled replies.
+- **Code rules load on demand.** The Code and Commits sections move to
+  `rules/code.md`, and `hooks/code_rules.py` adds them on a session's first
+  file edit. The Example section is gone. Together that is about 540 fewer
+  input tokens on every call. `hooks/run.sh` now takes the script name.
+
 ## 4.0.0 (2026-10-03)
 Wiring change: ConciseClaude installs as a Claude Code plugin. A manual install
 from 3.x must be removed first, or every reply is metered twice; see
