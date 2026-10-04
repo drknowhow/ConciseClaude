@@ -201,3 +201,25 @@ A manual install runs the same thing as `python ~/.claude/hooks/reply_shape.py r
   reply text.
 - Off switch: `mode off` stops all feedback but keeps measuring. Removing the
   two hook entries stops measuring too.
+
+## What it runs, stores and sends
+Everything runs on your machine. ConciseClaude makes no network requests and
+sends no telemetry.
+
+- **Runs:** the hooks in `hooks/hooks.json`, each through `hooks/run.sh`,
+  which starts the first Python 3.8+ it finds. At session start,
+  `session_start.sh` prints the rules pointer. When you send a prompt and when
+  a reply finishes, `reply_shape.py` measures the reply. After the first file
+  edit in a session, `code_rules.py` adds the code rules. In Haiku sessions
+  these hooks return without doing anything.
+- **Stores:** `~/.claude/reply_shape/` holds the reply log (sizes, flags and a
+  12-character hash per reply, never the reply text), the mode setting and
+  small per-session markers. If you install the diff meter, it also uses
+  `~/.claude/diff_shape/` (counts only, never code) and a copy of its script
+  in `~/.claude/conciseclaude/`.
+- **Writes outside those folders:** only when you run
+  `/conciseclaude:diff-hooks` in a repo. That writes `.git/hooks/pre-commit`
+  and `.git/hooks/commit-msg` there, and it won't overwrite a hook it didn't
+  write.
+- **Changes your settings:** no. The plugin forces its output style while
+  it's enabled; disabling the plugin removes it.
