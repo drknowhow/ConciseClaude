@@ -69,9 +69,12 @@ def suite(name, reps):
     return [(label, turns, tools, rep) for label, turns, tools in convs for rep in range(reps)]
 
 
-def write_settings(arm, workdir):
-    settings = {"outputStyle": "Concise" if arm == "on" else "default"}
-    if arm == "on":
+def write_settings(arm, workdir, plugin):
+    if arm == "on" and plugin:
+        settings = {}  # the plugin forces its style and brings its own hooks
+    else:
+        settings = {"outputStyle": "Concise" if arm == "on" else "default"}
+    if arm == "on" and not plugin:
         def entry(sub):
             return [{"hooks": [{"type": "command", "command": f'"{sys.executable}" "{HOOK}" {sub}', "timeout": 10}]}]
         settings["hooks"] = {"Stop": entry("stop"), "UserPromptSubmit": entry("prompt")}
@@ -80,14 +83,16 @@ def write_settings(arm, workdir):
     return path
 
 
-def converse(claude, model, arm, label, turns, tools, rep):
+def converse(claude, model, plugin, arm, label, turns, tools, rep):
     workdir = Path(tempfile.mkdtemp(prefix=f"ccab_{arm}_{label}_"))
     env = dict(os.environ, REPLY_SHAPE_DIR=str(workdir / ".reply_shape"))
-    settings, sid, rows = write_settings(arm, workdir), str(uuid.uuid4()), []
+    settings, sid, rows = write_settings(arm, workdir, plugin), str(uuid.uuid4()), []
     for turn, prompt in enumerate(turns):
         cmd = [claude, "-p", "--setting-sources", "project", "--settings", str(settings), "--strict-mcp-config",
                "--model", model, "--output-format", "json", "--session-id" if turn == 0 else "--resume", sid]
         cmd += CODE_TOOLS if tools else ["--tools", ""]
+        if arm == "on" and plugin:
+            cmd += ["--plugin-dir", plugin]
         start = time.monotonic()
         # The prompt goes on stdin: variadic flags like --tools would swallow a positional prompt.
         proc = subprocess.run(cmd, cwd=workdir, env=env, input=prompt, capture_output=True, text=True,
@@ -115,7 +120,7 @@ def run(args):
     jobs = [(arm, *conv) for conv in suite(args.suite, args.reps) for arm in ("off", "on")]
     random.Random(7).shuffle(jobs)
     with cf.ThreadPoolExecutor(args.parallel) as pool:
-        rows = [r for res in pool.map(lambda j: converse(claude, args.model, *j), jobs) for r in res]
+        rows = [r for res in pool.map(lambda j: converse(claude, args.model, args.plugin_dir, *j), jobs) for r in res]
     Path(args.out).write_text(json.dumps(rows, indent=1), "utf-8")
     print(f"{len(rows)} turns, {sum('error' in r for r in rows)} errors -> {args.out}")
 
@@ -148,6 +153,7 @@ def main(argv=None):
     p_run.add_argument("--reps", type=int, default=3)
     p_run.add_argument("--parallel", type=int, default=6)
     p_run.add_argument("--out", default="rows.json")
+    p_run.add_argument("--plugin-dir", help="run the on arm from this plugin directory instead of user-scope files")
     p_sum = sub.add_parser("summary")
     p_sum.add_argument("rows")
     args = parser.parse_args(argv)
