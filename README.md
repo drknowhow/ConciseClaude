@@ -1,10 +1,43 @@
-# ConciseClaude
+<p align="center">
+  <img src="assets/icon.png" width="96" alt="ConciseClaude icon">
+</p>
 
-A reply and code-shape system for Claude Code: shorter, more direct answers,
-and code without narration, with the same depth of work behind both. It
-changes how much Claude **says**, not how much it reads, thinks, or verifies.
+<h1 align="center">ConciseClaude</h1>
 
-Version: see [`VERSION`](VERSION) · changes: [`CHANGELOG.md`](CHANGELOG.md) · license: Apache-2.0
+<p align="center"><b>Claude Code that gets to the point. Same work, a third of the words.</b></p>
+
+<p align="center">
+  <a href="https://drknowhow.github.io/ConciseClaude/benchmark/"><img src="https://img.shields.io/badge/benchmark-522_replies,_graded_blind-2a78d6" alt="Benchmark"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdrknowhow%2FConciseClaude%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=1baf7a" alt="Version"></a>
+  <img src="https://img.shields.io/badge/Claude_Code-plugin-eb6834" alt="Claude Code plugin">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-52514e" alt="License"></a>
+</p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.png">
+  <img src="assets/hero-light.png" alt="The same question answered by default Claude Code in 3,018 characters and by ConciseClaude in 500.">
+</picture>
+
+ConciseClaude is a Claude Code plugin that changes how much Claude **says**,
+not how much it reads, thinks or checks. Replies open with the answer, and
+the preamble, step-by-step narration and closing recap are gone. When you ask
+for depth you get it, and errors, risks and safety steps are never trimmed.
+Code comes without commentary, and a meter measures every reply so the rules
+don't drift.
+
+- **Shorter and faster.** On Opus, replies are 71% shorter, cost 30% less and
+  arrive 42% sooner. On Sonnet: 67% shorter, 6% cheaper, 15% sooner.
+- **Still complete.** A blind grader found 93–94% of the key points a full
+  answer covers, against 98–99% for the default.
+- **Measured.** A Stop hook scores every reply and nudges Claude when one runs
+  long. `/conciseclaude:meter report` shows how it's doing.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.png">
+  <img src="assets/results-light.png" alt="Benchmark: reply length, output tokens, wait time and cost reductions on Sonnet and Opus, with key points covered.">
+</picture>
+
+<p align="center"><a href="https://drknowhow.github.io/ConciseClaude/benchmark/"><b>Open the interactive benchmark →</b></a></p>
 
 ## Install
 ```
@@ -58,6 +91,7 @@ history carries over.
 | Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
 | Plugin | `.claude-plugin/`, `hooks/hooks.json` | Manifest, one-plugin marketplace, and hook wiring. |
+| Visuals | `assets/`, `docs/index.html`, `docs/benchmark/` | Icon and README images (HTML sources in `assets/src/`), and the GitHub Pages site with the interactive benchmark. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
 | Version | `VERSION`, `CHANGELOG.md` | One canonical version; `tests/test_version_sync.py` fails if any copy drifts. |
 | Benchmark | `bench/ab.py` | Token, cost and speed A/B of style on vs off, using headless Claude Code. Not installed. |
