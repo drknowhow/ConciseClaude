@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConciseClaude 5.0 vs 4.0</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --surface-0: #f4f3f0; --surface-1: #fcfcfb; --border: #e4e2dc; --grid: #ecebe6;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7973;
+  --v5: #2a78d6; --v4: #eb6834; --off: #b9b7b0; --good: #006300; --bad: #b42d2d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark; --surface-0: #111110; --surface-1: #1a1a19; --border: #2c2c2a; --grid: #262624;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --v5: #3987e5; --v4: #d95926; --off: #5a5955; --good: #4cc24c; --bad: #e66767;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark; --surface-0: #111110; --surface-1: #1a1a19; --border: #2c2c2a; --grid: #262624;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+  --v5: #3987e5; --v4: #d95926; --off: #5a5955; --good: #4cc24c; --bad: #e66767;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+.viz-root { min-height: 100vh; background: var(--surface-0); color: var(--text-primary);
+  font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 40px 24px 56px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 4px; }
+.sub { color: var(--text-secondary); margin: 0; }
+.controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.legend { display: flex; gap: 14px; color: var(--text-secondary); font-size: 13px; }
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--surface-1); }
+.seg button { font: inherit; font-size: 12.5px; color: var(--text-secondary); background: none; border: 0; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface-0); color: var(--text-primary); font-weight: 600; }
+.theme { font: inherit; font-size: 12px; color: var(--text-secondary); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.kpi .label { color: var(--text-secondary); font-size: 13px; }
+.kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.kpi .detail { color: var(--text-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.good { color: var(--good); } .bad { color: var(--bad); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.card h2 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.note { color: var(--text-muted); font-size: 12.5px; margin: 0 0 14px; }
+.row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--text-secondary); font-size: 12px; font-family: inherit; }
+svg .muted { fill: var(--text-muted); font-size: 11px; }
+svg .strong { fill: var(--text-primary); font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-secondary); font-weight: 500; }
+td.win { color: var(--good); font-weight: 600; }
+td.loss { color: var(--bad); font-weight: 600; }
+.tip { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,.14); opacity: 0; z-index: 9; font-variant-numeric: tabular-nums; }
+.tip .r { display: flex; gap: 14px; justify-content: space-between; color: var(--text-secondary); }
+.tip b { font-weight: 600; }
+footer { color: var(--text-muted); font-size: 12.5px; margin-top: 18px; line-height: 1.6; }
+@media (max-width: 800px) { .kpis { grid-template-columns: repeat(2, 1fr); } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ConciseClaude 5.0 vs 4.0</h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="controls">
+      <div class="legend">
+        <span class="key"><span class="sw" style="background:var(--off)"></span>Default</span>
+        <span class="key"><span class="sw" style="background:var(--v4)"></span>4.0</span>
+        <span class="key"><span class="sw" style="background:var(--v5)"></span>5.0</span>
+      </div>
+      <div class="seg" id="model" role="group" aria-label="Model"></div>
+      <button class="theme" id="theme" type="button">Theme</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid2">
+    <div class="card">
+      <div class="row-head">
+        <div><h2>Default, 4.0 and 5.0</h2><p class="note" id="bar-note"></p></div>
+        <div class="seg" id="metric" role="group" aria-label="Metric"></div>
+      </div>
+      <svg id="bars" viewBox="0 0 480 170" role="img" aria-label="Default, 4.0 and 5.0 compared"></svg>
+    </div>
+    <div class="card">
+      <h2>Did each fix land?</h2>
+      <p class="note">Checklist points covered, out of 2 runs each</p>
+      <table id="checks"></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Key points covered, by question type</h2>
+    <p class="note">Each row: default, 4.0 and 5.0</p>
+    <svg id="cats" viewBox="0 0 1000 250" role="img" aria-label="Coverage by question type"></svg>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+<div class="tip" id="tip"></div>
+</div>
+<script>
+const D = {
+ "models": {
+  "sonnet": {
+   "arms": {
+    "off": {
+     "out": 78630,
+     "cost": 2.94,
+     "wall": 800,
+     "out_ex": 62684,
+     "cost_ex": 2.749,
+     "wall_ex": 674,
+     "coverage": 0.98,
+     "terse": 0.0,
+     "in_call": 4478,
+     "label": 0,
+     "verdict_first": 0,
+     "over": 1,
+     "depth_out": 7973
+    },
+    "v4": {
+     "out": 40208,
+     "cost": 2.701,
+     "wall": 566,
+     "out_ex": 38271,
+     "cost_ex": 2.63,
+     "wall_ex": 544,
+     "coverage": 0.874,
+     "terse": 0.179,
+     "in_call": 7038,
+     "label": 0.442,
+     "verdict_first": 0.692,
+     "over": 0.192,
+     "depth_out": 968
+    },
+    "v5": {
+     "out": 55125,
+     "cost": 2.79,
+     "wall": 719,
+     "out_ex": 39502,
+     "cost_ex": 2.587,
+     "wall_ex": 573,
+     "coverage": 0.938,
+     "terse": 0.0,
+     "in_call": 6503,
+     "label": 0.212,
+     "verdict_first": 0.769,
+     "over": 0.25,
+     "depth_out": 7812
+    }
+   },
+   "cats": {
+    "ambiguous": {
+     "off": 1.0,
+     "v4": 0.625,
+     "v5": 1.0
+    },
+    "debug": {
+     "off": 0.9,
+     "v4": 0.8,
+     "v5": 0.8
+    },
+    "depth": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "destructive": {
+     "off": 1.0,
+     "v4": 0.9,
+     "v5": 1.0
+    },
+    "explain": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 0.95
+    },
+    "howto": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "plan": {
+     "off": 0.917,
+     "v4": 0.917,
+     "v5": 0.833
+    },
+    "prose": {
+     "off": 1.0,
+     "v4": 0.7,
+     "v5": 1.0
+    },
+    "recommend": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "review": {
+     "off": 1.0,
+     "v4": 0.75,
+     "v5": 0.9
+    },
+    "security": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    }
+   }
+  },
+  "opus": {
+   "arms": {
+    "off": {
+     "out": 113405,
+     "cost": 7.416,
+     "wall": 1348,
+     "out_ex": 80622,
+     "cost_ex": 6.697,
+     "wall_ex": 1026,
+     "coverage": 0.987,
+     "terse": 0.0,
+     "in_call": 4474,
+     "label": 0,
+     "verdict_first": 0,
+     "over": 1,
+     "depth_out": 16392
+    },
+    "v4": {
+     "out": 47088,
+     "cost": 5.365,
+     "wall": 703,
+     "out_ex": 37155,
+     "cost_ex": 5.063,
+     "wall_ex": 599,
+     "coverage": 0.928,
+     "terse": 0.036,
+     "in_call": 7034,
+     "label": 0.442,
+     "verdict_first": 0.846,
+     "over": 0.154,
+     "depth_out": 4966
+    },
+    "v5": {
+     "out": 58205,
+     "cost": 5.25,
+     "wall": 835,
+     "out_ex": 34856,
+     "cost_ex": 4.688,
+     "wall_ex": 598,
+     "coverage": 0.931,
+     "terse": 0.036,
+     "in_call": 6499,
+     "label": 0.327,
+     "verdict_first": 0.885,
+     "over": 0.135,
+     "depth_out": 11674
+    }
+   },
+   "cats": {
+    "ambiguous": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "debug": {
+     "off": 0.95,
+     "v4": 0.9,
+     "v5": 0.85
+    },
+    "depth": {
+     "off": 1.0,
+     "v4": 0.857,
+     "v5": 1.0
+    },
+    "destructive": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "explain": {
+     "off": 1.0,
+     "v4": 0.95,
+     "v5": 1.0
+    },
+    "howto": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "plan": {
+     "off": 0.917,
+     "v4": 0.833,
+     "v5": 0.833
+    },
+    "prose": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "recommend": {
+     "off": 1.0,
+     "v4": 0.8,
+     "v5": 0.8
+    },
+    "review": {
+     "off": 1.0,
+     "v4": 0.9,
+     "v5": 0.9
+    },
+    "security": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 0.9
+    }
+   }
+  },
+  "haiku": {
+   "arms": {
+    "off": {
+     "out": 63958,
+     "cost": 1.849,
+     "wall": 776,
+     "out_ex": 58494,
+     "cost_ex": 1.789,
+     "wall_ex": 711,
+     "coverage": 0.748,
+     "terse": 0.071,
+     "in_call": 8029,
+     "label": 0,
+     "verdict_first": 0,
+     "over": 0.904,
+     "depth_out": 2732
+    },
+    "v4": {
+     "out": 52558,
+     "cost": 1.896,
+     "wall": 696,
+     "out_ex": 47338,
+     "cost_ex": 1.83,
+     "wall_ex": 632,
+     "coverage": 0.711,
+     "terse": 0.107,
+     "in_call": 9995,
+     "label": 0.077,
+     "verdict_first": 0.308,
+     "over": 0.5,
+     "depth_out": 2610
+    },
+    "v5": {
+     "out": 49848,
+     "cost": 1.777,
+     "wall": 696,
+     "out_ex": 45042,
+     "cost_ex": 1.715,
+     "wall_ex": 637,
+     "coverage": 0.716,
+     "terse": 0.071,
+     "in_call": 9612,
+     "label": 0.058,
+     "verdict_first": 0.404,
+     "over": 0.481,
+     "depth_out": 2403
+    }
+   },
+   "cats": {
+    "ambiguous": {
+     "off": 0.75,
+     "v4": 0.625,
+     "v5": 0.625
+    },
+    "debug": {
+     "off": 0.65,
+     "v4": 0.65,
+     "v5": 0.4
+    },
+    "depth": {
+     "off": 1.0,
+     "v4": 1.0,
+     "v5": 1.0
+    },
+    "destructive": {
+     "off": 0.6,
+     "v4": 0.5,
+     "v5": 0.6
+    },
+    "explain": {
+     "off": 0.95,
+     "v4": 1.0,
+     "v5": 0.9
+    },
+    "howto": {
+     "off": 0.9,
+     "v4": 0.8,
+     "v5": 1.0
+    },
+    "plan": {
+     "off": 0.417,
+     "v4": 0.333,
+     "v5": 0.5
+    },
+    "prose": {
+     "off": 0.7,
+     "v4": 0.8,
+     "v5": 1.0
+    },
+    "recommend": {
+     "off": 0.7,
+     "v4": 0.8,
+     "v5": 0.8
+    },
+    "review": {
+     "off": 0.7,
+     "v4": 0.55,
+     "v5": 0.65
+    },
+    "security": {
+     "off": 0.8,
+     "v4": 0.7,
+     "v5": 0.6
+    }
+   }
+  }
+ },
+ "checks": [
+  {
+   "label": "Look first before docker prune",
+   "tid": "destructive_docker",
+   "i": 3,
+   "vals": {
+    "sonnet": {
+     "off": 2,
+     "v4": 1,
+     "v5": 2
+    },
+    "opus": {
+     "off": 2,
+     "v4": 2,
+     "v5": 2
+    },
+    "haiku": {
+     "off": 1,
+     "v4": 2,
+     "v5": 2
+    }
+   }
+  },
+  {
+   "label": "Fetch main before deleting branches",
+   "tid": "howto_branches",
+   "i": 3,
+   "vals": {
+    "sonnet": {
+     "off": 2,
+     "v4": 2,
+     "v5": 2
+    },
+    "opus": {
+     "off": 2,
+     "v4": 2,
+     "v5": 2
+    },
+    "haiku": {
+     "off": 1,
+     "v4": 0,
+     "v5": 2
+    }
+   }
+  },
+  {
+   "label": "Close the cursor (SQL review)",
+   "tid": "review_sql",
+   "i": 4,
+   "vals": {
+    "sonnet": {
+     "off": 2,
+     "v4": 0,
+     "v5": 2
+    },
+    "opus": {
+     "off": 2,
+     "v4": 2,
+     "v5": 2
+    },
+    "haiku": {
+     "off": 1,
+     "v4": 0,
+     "v5": 0
+    }
+   }
+  },
+  {
+   "label": "PR draft covers testing",
+   "tid": "prose_pr",
+   "i": 3,
+   "vals": {
+    "sonnet": {
+     "off": 2,
+     "v4": 1,
+     "v5": 2
+    },
+    "opus": {
+     "off": 2,
+     "v4": 2,
+     "v5": 2
+    },
+    "haiku": {
+     "off": 0,
+     "v4": 1,
+     "v5": 2
+    }
+   }
+  }
+ ],
+ "cost": {
+  "bench": 31.98,
+  "judge": 5.53
+ }
+};
+const ARMS = [["off", "Default"], ["v4", "4.0"], ["v5", "5.0"]];
+const CATN = { depth: "Asked for depth", recommend: "Recommend", debug: "Debug", explain: "Explain", security: "Security", review: "Review", howto: "How-to", ambiguous: "Ambiguous", plan: "Plan", destructive: "Destructive", prose: "Draft" };
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a = {}, p) => { const n = document.createElementNS(NS, t); for (const [k, v] of Object.entries(a)) n.setAttribute(k, v); if (p) p.appendChild(n); return n; };
+const txt = (p, x, y, s, a = {}) => { const t = el("text", { x, y, ...a }, p); t.textContent = s; return t; };
+const tip = document.getElementById("tip");
+const show = (e, h) => { tip.innerHTML = h; tip.style.opacity = 1; const w = tip.offsetWidth; tip.style.left = (e.clientX + 14 + w > innerWidth ? e.clientX - w - 14 : e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px"; };
+const hide = () => { tip.style.opacity = 0; };
+const pctv = (a, b) => 100 * (b - a) / a;
+const sgn = v => (v > 0 ? "+" : "−") + Math.abs(v).toFixed(0) + "%";
+let model = "sonnet", metric = "cost_ex";
+const M = {
+  cost_ex: { label: "Cost", fmt: v => "$" + v.toFixed(2), note: "API-rate cost, all suites except the depth question" },
+  out_ex: { label: "Output", fmt: v => Math.round(v).toLocaleString(), note: "Output tokens, all suites except the depth question" },
+  coverage: { label: "Coverage", fmt: v => (v * 100).toFixed(0) + "%", note: "Share of checklist points covered, single-turn questions" },
+  in_call: { label: "Input", fmt: v => Math.round(v).toLocaleString(), note: "Input tokens per single-turn call" },
+  depth_out: { label: "Depth", fmt: v => Math.round(v).toLocaleString(), note: "Output tokens when asked to explain in depth" },
+};
+document.getElementById("sub").textContent = "522 replies on Sonnet, Opus and Haiku; 252 graded blind against key-point checklists.";
+function segs(id, items, cur, on) {
+  const s = document.getElementById(id); s.innerHTML = "";
+  for (const [k, l] of items) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = l; b.setAttribute("aria-pressed", k === cur);
+    b.onclick = () => { [...s.children].forEach(c => c.setAttribute("aria-pressed", c === b)); on(k); }; s.appendChild(b);
+  }
+}
+function kpis() {
+  const A = D.models[model].arms, k = document.getElementById("kpis");
+  const tile = (label, value, cls, detail) => `<div class="card kpi"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="detail">${detail}</div></div>`;
+  const dc = (A.v5.coverage - A.v4.coverage) * 100;
+  const dl = (A.v5.label - A.v4.label) * 100;
+  const c4 = pctv(A.off.cost_ex, A.v4.cost_ex), c5 = pctv(A.off.cost_ex, A.v5.cost_ex);
+  const o5 = pctv(A.off.out_ex, A.v5.out_ex);
+  k.innerHTML =
+    tile("Key points covered, 4.0 → 5.0", (dc >= 0 ? "+" : "−") + Math.abs(dc).toFixed(1) + " pt", dc > 0.5 ? "good" : dc < -0.5 ? "bad" : "",
+      `${(A.v4.coverage * 100).toFixed(0)}% → ${(A.v5.coverage * 100).toFixed(0)}% (default ${(A.off.coverage * 100).toFixed(0)}%)`) +
+    tile("Cost vs default, 5.0", sgn(c5), c5 < 0 ? "good" : "bad", `4.0 was ${sgn(c4)} · depth question excluded`) +
+    tile("Output vs default, 5.0", sgn(o5), o5 < 0 ? "good" : "bad", `${A.off.out_ex.toLocaleString()} → ${A.v5.out_ex.toLocaleString()} tokens`) +
+    tile("Replies with a protected label", (A.v5.label * 100).toFixed(0) + "%", dl < -0.5 ? "good" : "", `4.0: ${(A.v4.label * 100).toFixed(0)}%`);
+}
+function bars() {
+  const svg = document.getElementById("bars"); svg.innerHTML = "";
+  const m = M[metric], A = D.models[model].arms;
+  document.getElementById("bar-note").textContent = m.note;
+  const L = 80, R = 390, max = Math.max(...ARMS.map(([a]) => A[a][metric]));
+  const x = v => L + (R - L) * v / max;
+  ARMS.forEach(([a, name], i) => {
+    const y = 10 + i * 50, v = A[a][metric];
+    txt(svg, 0, y + 16, name, { class: a === "off" ? "" : "strong" });
+    el("rect", { x: L, y, width: Math.max(2, x(v) - L), height: 24, rx: 4, fill: `var(--${a})` }, svg);
+    txt(svg, x(v) + 8, y + 16, m.fmt(v) + (a === "off" || metric === "coverage" ? "" : "  " + sgn(pctv(A.off[metric], v))));
+    const hit = el("rect", { x: 0, y: y - 6, width: 480, height: 36, fill: "transparent" }, svg);
+    const s = A[a];
+    hit.addEventListener("mousemove", e => show(e, `<b>${name}</b>` + [["Cost (ex depth)", "$" + s.cost_ex.toFixed(2)], ["Output (ex depth)", s.out_ex.toLocaleString()],
+      ["Coverage", (s.coverage * 100).toFixed(0) + "%"], ["Graded too terse", (s.terse * 100).toFixed(0) + "%"], ["Input / call", s.in_call.toLocaleString()],
+      ["Result line first", (s.verdict_first * 100).toFixed(0) + "%"], ["Over budget", (s.over * 100).toFixed(0) + "%"]].map(([k, v]) => `<div class="r"><span>${k}</span><b>${v}</b></div>`).join("")));
+    hit.addEventListener("mouseleave", hide);
+  });
+}
+function checks() {
+  const A = D.models[model].arms, t = document.getElementById("checks");
+  const cls = (v4, v5, better) => (better(v5, v4) ? "win" : better(v4, v5) ? "loss" : "");
+  let h = `<tr><th>Fix</th><th>Default</th><th>4.0</th><th>5.0</th></tr>`;
+  h += `<tr><td>Depth answer (tokens)</td><td>${A.off.depth_out.toLocaleString()}</td><td>${A.v4.depth_out.toLocaleString()}</td><td class="${cls(A.v4.depth_out, A.v5.depth_out, (a, b) => a > b * 1.5)}">${A.v5.depth_out.toLocaleString()}</td></tr>`;
+  for (const c of D.checks) {
+    const v = c.vals[model];
+    h += `<tr><td>${c.label}</td><td>${v.off}/2</td><td>${v.v4}/2</td><td class="${cls(v.v4, v.v5, (a, b) => a > b)}">${v.v5}/2</td></tr>`;
+  }
+  h += `<tr><td>Protected label</td><td>${(A.off.label * 100).toFixed(0)}%</td><td>${(A.v4.label * 100).toFixed(0)}%</td><td class="${cls(A.v4.label, A.v5.label, (a, b) => a < b - 0.03)}">${(A.v5.label * 100).toFixed(0)}%</td></tr>`;
+  h += `<tr><td>Input tokens per call</td><td>${A.off.in_call.toLocaleString()}</td><td>${A.v4.in_call.toLocaleString()}</td><td class="${cls(A.v4.in_call, A.v5.in_call, (a, b) => a < b - 100)}">${A.v5.in_call.toLocaleString()}</td></tr>`;
+  t.innerHTML = h;
+}
+function cats() {
+  const svg = document.getElementById("cats"); svg.innerHTML = "";
+  const C = D.models[model].cats, keys = Object.keys(CATN).filter(k => C[k]);
+  const T = 10, B = 200, cw = 1000 / keys.length;
+  const y = v => B - (B - T) * v;
+  [0, 0.5, 1].forEach(g => { el("line", { x1: 0, x2: 1000, y1: y(g), y2: y(g), stroke: "var(--grid)" }, svg); txt(svg, 0, y(g) - 4, (g * 100) + "%", { class: "muted" }); });
+  keys.forEach((k, i) => {
+    const cx = cw * i + cw / 2;
+    txt(svg, cx, B + 22, CATN[k], { "text-anchor": "middle", class: "muted" });
+    ARMS.forEach(([a, name], j) => {
+      const v = C[k][a]; if (v == null) return;
+      const bx = cx - 21 + j * 15;
+      el("rect", { x: bx, y: y(v), width: 12, height: Math.max(2, B - y(v)), rx: 3, fill: `var(--${a})` }, svg);
+    });
+    const hit = el("rect", { x: cw * i, y: T, width: cw, height: B - T + 26, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", e => show(e, `<b>${CATN[k]}</b>` + ARMS.map(([a, n]) => `<div class="r"><span>${n}</span><b>${(C[k][a] * 100).toFixed(0)}%</b></div>`).join("")));
+    hit.addEventListener("mouseleave", hide);
+  });
+}
+function draw() { kpis(); bars(); checks(); cats(); }
+segs("model", [["sonnet", "Sonnet"], ["opus", "Opus"], ["haiku", "Haiku"]], model, k => { model = k; draw(); });
+segs("metric", Object.entries(M).map(([k, m]) => [k, m.label]), metric, k => { metric = k; bars(); });
+draw();
+document.getElementById("foot").innerHTML =
+  `Claude Code 2.1.289 headless, 2026-10-04. Each model ran 14 single-turn question types, two six-turn conversations and three coding tasks, twice each, with no plugin (default), the 4.0.0 plugin, and 5.0.0 (PR #8). ` +
+  `A separate Sonnet session graded the single-turn replies blind against 4–7 key points per question. Cost and output exclude the depth question, because 5.0 is meant to answer it at length. ` +
+  `Tests passed in every coding run. Spend: $${D.cost.bench} for the benchmark and $${D.cost.judge} for grading, at API-rate estimates.`;
+document.getElementById("theme").onclick = () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; };
+</script>
+</body>
+</html>

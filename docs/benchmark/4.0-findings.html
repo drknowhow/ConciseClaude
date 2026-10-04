@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConciseClaude — where to improve</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --surface-0: #f4f3f0; --surface-1: #fcfcfb; --border: #e4e2dc; --grid: #ecebe6;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7973;
+  --series: #2a78d6; --down: #2a78d6; --up: #e34948; --good: #006300; --bad: #b42d2d; --neutral: #d9d7d0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --surface-0: #111110; --surface-1: #1a1a19; --border: #2c2c2a; --grid: #262624;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --series: #3987e5; --down: #3987e5; --up: #e66767; --good: #4cc24c; --bad: #e66767; --neutral: #3a3a37;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --surface-0: #111110; --surface-1: #1a1a19; --border: #2c2c2a; --grid: #262624;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+  --series: #3987e5; --down: #3987e5; --up: #e66767; --good: #4cc24c; --bad: #e66767; --neutral: #3a3a37;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+.viz-root { min-height: 100vh; background: var(--surface-0); color: var(--text-primary);
+  font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; padding: 40px 24px 56px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 4px; }
+.sub { color: var(--text-secondary); margin: 0; }
+.controls { display: flex; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--surface-1); }
+.seg button { font: inherit; font-size: 12.5px; color: var(--text-secondary); background: none; border: 0; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface-0); color: var(--text-primary); font-weight: 600; }
+.theme { font: inherit; font-size: 12px; color: var(--text-secondary); background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+.kpi .label { color: var(--text-secondary); font-size: 13px; }
+.kpi .value { font-size: 32px; font-weight: 650; letter-spacing: -0.02em; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.kpi .detail { color: var(--text-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.good { color: var(--good); } .bad { color: var(--bad); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.card h2 { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.note { color: var(--text-muted); font-size: 12.5px; margin: 0 0 14px; }
+.row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--text-secondary); font-size: 12px; font-family: inherit; }
+svg .muted { fill: var(--text-muted); font-size: 11px; }
+svg .strong { fill: var(--text-primary); font-weight: 600; }
+.tip { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,.14); opacity: 0; z-index: 9; font-variant-numeric: tabular-nums; max-width: 280px; }
+.tip b { font-weight: 600; }
+.tip .r { display: flex; gap: 12px; color: var(--text-secondary); justify-content: space-between; }
+h3.section { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; margin: 28px 0 10px; }
+.findings { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.finding { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; }
+.finding .n { grid-row: span 3; width: 24px; height: 24px; border-radius: 6px; background: var(--surface-0); border: 1px solid var(--border); display: grid; place-items: center; font-size: 12px; font-weight: 650; color: var(--text-secondary); }
+.finding .t { font-weight: 600; }
+.finding .e { color: var(--text-secondary); font-size: 13px; }
+.finding .f { font-size: 13px; }
+.finding .f b { font-weight: 600; }
+.tag { display: inline-block; font-size: 11px; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; margin-left: 6px; vertical-align: 1px; font-weight: 500; }
+.keep { border-style: dashed; }
+footer { color: var(--text-muted); font-size: 12.5px; margin-top: 20px; line-height: 1.6; }
+code { font-size: 12px; }
+@media (max-width: 800px) { .kpis { grid-template-columns: repeat(2, 1fr); } .grid2, .findings { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ConciseClaude: where to improve</h1>
+      <p class="sub">448 replies across 4 setups on Sonnet and Haiku; 224 graded blind against key-point checklists.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" id="model" role="group" aria-label="Model"></div>
+      <button class="theme" id="theme" type="button">Theme</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid2">
+    <div class="card">
+      <div class="row-head">
+        <div><h2>Setups compared</h2><p class="note" id="setup-note"></p></div>
+        <div class="seg" id="metric" role="group" aria-label="Metric"></div>
+      </div>
+      <svg id="setups" viewBox="0 0 480 200" role="img" aria-label="Setups compared"></svg>
+    </div>
+    <div class="card">
+      <h2>By question type</h2>
+      <p class="note">Output change with the plugin, and key points covered (default → plugin)</p>
+      <svg id="cats" viewBox="0 0 480 330" role="img" aria-label="Output change and coverage by question type"></svg>
+    </div>
+  </section>
+
+  <h3 class="section">What to change, ranked</h3>
+  <section class="findings">
+    <div class="card finding"><div class="n">1</div>
+      <div class="t">Honor explicit requests for depth<span class="tag">substance</span></div>
+      <div class="e">Asked to "explain in depth, take as much space as you need", Sonnet answered in about 900 output tokens instead of 8,346 and pointed the user to <code>/v</code>. The grader marked all 6 plugin replies too terse.</div>
+      <div class="f"><b>Fix:</b> a clear request for depth in the message starts a one-turn verbose stage, in the style and in the meter.</div></div>
+    <div class="card finding"><div class="n">2</div>
+      <div class="t">Keep safety and precondition steps<span class="tag">safety</span></div>
+      <div class="e">Concise tended to drop the "look first" steps on Sonnet. Default covered each of these in 2 of 2 replies; the three Concise setups covered them in fewer of 6: <code>docker system df</code> or a backup before pruning (3), fetching main before deleting merged branches (3), and closing the cursor in the SQL review (2). The samples are small, but all three point the same way.</div>
+      <div class="f"><b>Fix:</b> add to the never-cut list a dry run or preview before a destructive step, and any precondition the command's result depends on.</div></div>
+    <div class="card finding"><div class="n">3</div>
+      <div class="t">Write drafts for other people in full<span class="tag">substance</span></div>
+      <div class="e">In one of two full-plugin runs, a PR description for another team left placeholders where callers and testing should be (coverage 0.8). Drafts also took a protected label in 2 of 2 Sonnet runs, which shows the model squeezing a deliverable to fit the reply budget. It's a single case so far; rerun before relying on it.</div>
+      <div class="f"><b>Fix:</b> the budget covers the chat around a draft, not the draft itself. Put the draft in a fence so the meter doesn't count it.</div></div>
+    <div class="card finding"><div class="n">4</div>
+      <div class="t">Cut the always-on prompt<span class="tag">cost</span></div>
+      <div class="e">The plugin adds about 2,560 input tokens to every Sonnet call (4,478 → 7,035). The slim style, which leaves out the Code, Commits and Example sections, saved 870 tokens per call. Its cost fell 18% instead of 16%, and coverage was 0.93 instead of 0.90.</div>
+      <div class="f"><b>Fix:</b> load the code and commit rules only when needed (a skill, or a hook that fires on commits). Caveat: these coding tasks were too small to show any change in comments.</div></div>
+    <div class="card finding"><div class="n">5</div>
+      <div class="t">Stop label inflation<span class="tag">budget</span></div>
+      <div class="e">40% of Sonnet plugin replies wore a protected label to get 900 characters, including plain explanations, a database recommendation and a how-to.</div>
+      <div class="f"><b>Fix:</b> allow a label only when the user asked for that kind of work or the reply carries real risk. Show the label rate in <code>report</code> and nudge when a label doesn't match the content.</div></div>
+    <div class="card finding"><div class="n">6</div>
+      <div class="t">Make it work on Haiku<span class="tag">coverage</span></div>
+      <div class="e">On Haiku the style alone cut output only 6% and raised cost 10%. Only 40% of replies opened with the result line. The nudge hook did the real work.</div>
+      <div class="f"><b>Fix:</b> test a short core style (about 1 KB) for small models, or default Haiku sessions to block mode.</div></div>
+    <div class="card finding keep"><div class="n">✓</div>
+      <div class="t">Keep: the nudge hook<span class="tag">works</span></div>
+      <div class="e">Across six-turn conversations, the full plugin produced 20% less output than the style alone on Sonnet, and 39% less on Haiku.</div>
+      <div class="f">The hook is the main lever on small models.</div></div>
+    <div class="card finding keep"><div class="n">✓</div>
+      <div class="t">Leave coding alone<span class="tag">no lever</span></div>
+      <div class="e">Tool calls made up 74% of coding output on Sonnet and 87% on Haiku. Tests passed in every setup, and the final summary was about 45% shorter.</div>
+      <div class="f">There's little left to cut without touching the code itself.</div></div>
+  </section>
+
+  <footer>
+    Claude Code 2.1.289 headless, 2026-10-04. Setups: <b>default</b> (no plugin) · <b>full</b> (the installed 4.0.0 plugin) · <b>style</b> (forced style, no hooks or pointer) · <b>slim</b> (full, minus the Code, Commits and Example sections).
+    Each model × setup ran 14 single-turn question types, two six-turn conversations and two coding tasks, twice each.
+    A separate Sonnet session graded the single-turn replies blind against 4–7 key points per question. Grading is a model judgment, so small coverage differences are noise; the large gaps in the findings are not.
+    Total spend: $17.75 for the benchmark and $4.72 for grading, at API-rate estimates.
+  </footer>
+</div>
+<div class="tip" id="tip"></div>
+</div>
+<script>
+const D = {"models": {"sonnet": {"arms": {"off": {"out": 77783, "cost": 3.086, "wall": 806, "coverage": 0.939, "in_call": 4478, "terse": 0.036, "verdict_first": 0, "over": 0.981, "label": 0, "multi_out": 35405}, "full": {"out": 36706, "cost": 2.6, "wall": 530, "coverage": 0.902, "in_call": 7035, "terse": 0.107, "verdict_first": 0.673, "over": 0.231, "label": 0.404, "multi_out": 15878}, "style": {"out": 39861, "cost": 2.702, "wall": 530, "coverage": 0.914, "in_call": 6801, "terse": 0.071, "verdict_first": 0.519, "over": 0.154, "label": 0.558, "multi_out": 19936}, "lite": {"out": 38170, "cost": 2.528, "wall": 537, "coverage": 0.931, "in_call": 6166, "terse": 0.071, "verdict_first": 0.712, "over": 0.135, "label": 0.442, "multi_out": 17444}}, "cats": {"depth": {"out_off": 8345.5, "out_full": 904, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 1}, "recommend": {"out_off": 625, "out_full": 189, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 0}, "debug": {"out_off": 958.75, "out_full": 443.75, "cov_off": 0.85, "cov_full": 0.85, "terse_full": 0}, "explain": {"out_off": 1064.25, "out_full": 720.5, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 0}, "security": {"out_off": 827, "out_full": 602, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 0}, "review": {"out_off": 587.5, "out_full": 403, "cov_off": 0.95, "cov_full": 0.75, "terse_full": 0}, "howto": {"out_off": 1000.5, "out_full": 758, "cov_off": 1.0, "cov_full": 0.9, "terse_full": 0}, "ambiguous": {"out_off": 353.5, "out_full": 288.5, "cov_off": 0.625, "cov_full": 1.0, "terse_full": 0}, "plan": {"out_off": 1226, "out_full": 1063.5, "cov_off": 0.917, "cov_full": 0.833, "terse_full": 0}, "destructive": {"out_off": 753.5, "out_full": 643, "cov_off": 1.0, "cov_full": 0.9, "terse_full": 0}, "prose": {"out_off": 893, "out_full": 1081, "cov_off": 1.0, "cov_full": 0.8, "terse_full": 0.5}}}, "haiku": {"arms": {"off": {"out": 52175, "cost": 1.667, "wall": 653, "coverage": 0.726, "in_call": 8028, "terse": 0.107, "verdict_first": 0, "over": 0.904, "label": 0, "multi_out": 23173}, "full": {"out": 40148, "cost": 1.696, "wall": 586, "coverage": 0.742, "in_call": 9993, "terse": 0.071, "verdict_first": 0.404, "over": 0.5, "label": 0.058, "multi_out": 12650}, "style": {"out": 48993, "cost": 1.84, "wall": 635, "coverage": 0.711, "in_call": 9813, "terse": 0.071, "verdict_first": 0.231, "over": 0.827, "label": 0.019, "multi_out": 20649}, "lite": {"out": 39095, "cost": 1.63, "wall": 577, "coverage": 0.671, "in_call": 9348, "terse": 0.143, "verdict_first": 0.404, "over": 0.442, "label": 0.077, "multi_out": 12499}}, "cats": {"depth": {"out_off": 2919.5, "out_full": 2689.5, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 0}, "recommend": {"out_off": 445, "out_full": 336.5, "cov_off": 0.8, "cov_full": 0.8, "terse_full": 0}, "debug": {"out_off": 711.5, "out_full": 664.5, "cov_off": 0.55, "cov_full": 0.65, "terse_full": 0}, "explain": {"out_off": 629, "out_full": 507.25, "cov_off": 1.0, "cov_full": 1.0, "terse_full": 0}, "security": {"out_off": 493, "out_full": 387.5, "cov_off": 0.8, "cov_full": 0.7, "terse_full": 0}, "review": {"out_off": 504.75, "out_full": 457, "cov_off": 0.6, "cov_full": 0.6, "terse_full": 0}, "howto": {"out_off": 657.5, "out_full": 652, "cov_off": 0.8, "cov_full": 0.8, "terse_full": 0}, "ambiguous": {"out_off": 400, "out_full": 323.5, "cov_off": 0.75, "cov_full": 0.75, "terse_full": 0}, "plan": {"out_off": 394.5, "out_full": 362, "cov_off": 0.417, "cov_full": 0.333, "terse_full": 1}, "destructive": {"out_off": 503, "out_full": 601.5, "cov_off": 0.5, "cov_full": 0.7, "terse_full": 0}, "prose": {"out_off": 505.5, "out_full": 697, "cov_off": 0.8, "cov_full": 0.8, "terse_full": 0}}}}};
+const ARMS = [["off", "Default"], ["full", "Full plugin"], ["style", "Style only"], ["lite", "Slim style"]];
+const CATN = { depth: "Asked for depth", recommend: "Recommendation", debug: "Debugging", explain: "Explanation", security: "Security", review: "Code review", howto: "How-to", ambiguous: "Ambiguous ask", plan: "Plan", destructive: "Destructive op", prose: "Draft for others" };
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (parent) parent.appendChild(n); return n; };
+const txt = (p, x, y, s, a = {}) => { const t = el("text", { x, y, ...a }, p); t.textContent = s; return t; };
+const pct = (a, b) => { const v = 100 * (b - a) / a; return (v > 0 ? "+" : "−") + Math.abs(v).toFixed(0) + "%"; };
+const tip = document.getElementById("tip");
+const show = (e, h) => { tip.innerHTML = h; tip.style.opacity = 1; const w = tip.offsetWidth; tip.style.left = (e.clientX + 14 + w > innerWidth ? e.clientX - w - 14 : e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px"; };
+const hide = () => { tip.style.opacity = 0; };
+let model = "sonnet", metric = "cost";
+const METRICS = {
+  cost: { label: "Cost", fmt: v => "$" + v.toFixed(2), get: a => a.cost, note: "Total API-rate cost, all suites" },
+  out: { label: "Output", fmt: v => Math.round(v).toLocaleString(), get: a => a.out, note: "Output tokens, all suites" },
+  in_call: { label: "Input/call", fmt: v => Math.round(v).toLocaleString(), get: a => a.in_call, note: "Input tokens per single-turn call" },
+  coverage: { label: "Coverage", fmt: v => (v * 100).toFixed(0) + "%", get: a => a.coverage, note: "Share of checklist points covered" },
+};
+function segs(id, items, cur, on) {
+  const s = document.getElementById(id); s.innerHTML = "";
+  for (const [k, label] of items) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.setAttribute("aria-pressed", k === cur);
+    b.onclick = () => { [...s.children].forEach(c => c.setAttribute("aria-pressed", c === b)); on(k); };
+    s.appendChild(b);
+  }
+}
+function kpis() {
+  const A = D.models[model].arms, off = A.off, full = A.full, k = document.getElementById("kpis");
+  const cell = (label, a, b, fmt, lowerBetter = true, isPts = false) => {
+    const d = isPts ? (b - a) * 100 : 100 * (b - a) / a;
+    const good = lowerBetter ? d < 0 : d > 0;
+    const v = isPts ? (d > 0 ? "+" : "−") + Math.abs(d).toFixed(1) + " pt" : (d > 0 ? "+" : "−") + Math.abs(d).toFixed(0) + "%";
+    return `<div class="card kpi"><div class="label">${label}</div><div class="value ${Math.abs(d) < 1 ? "" : good ? "good" : "bad"}">${v}</div><div class="detail">${fmt(a)} → ${fmt(b)}</div></div>`;
+  };
+  k.innerHTML = cell("Output tokens", off.out, full.out, v => v.toLocaleString()) + cell("Cost", off.cost, full.cost, v => "$" + v.toFixed(2)) +
+    cell("Wall time", off.wall, full.wall, v => v + " s") + cell("Key points covered", off.coverage, full.coverage, v => (v * 100).toFixed(0) + "%", false, true);
+}
+function setups() {
+  const svg = document.getElementById("setups"); svg.innerHTML = "";
+  const M = METRICS[metric], A = D.models[model].arms;
+  document.getElementById("setup-note").textContent = M.note;
+  const L = 96, R = 400, max = Math.max(...ARMS.map(([a]) => M.get(A[a])));
+  const x = v => L + (R - L) * v / max;
+  ARMS.forEach(([a, name], i) => {
+    const y = 12 + i * 46, v = M.get(A[a]);
+    txt(svg, 0, y + 15, name, { class: a === "off" ? "" : "strong" });
+    el("rect", { x: L, y, width: Math.max(2, x(v) - L), height: 22, rx: 4, fill: a === "off" ? "var(--neutral)" : "var(--series)" }, svg);
+    txt(svg, x(v) + 8, y + 15, M.fmt(v) + (a === "off" ? "" : "  " + pct(M.get(A.off), v)));
+    const hit = el("rect", { x: 0, y: y - 6, width: 480, height: 34, fill: "transparent" }, svg);
+    const s = A[a];
+    hit.addEventListener("mousemove", e => show(e, `<b>${name}</b>` +
+      `<div class="r"><span>Cost</span><b>$${s.cost.toFixed(2)}</b></div><div class="r"><span>Output tokens</span><b>${s.out.toLocaleString()}</b></div>` +
+      `<div class="r"><span>Input / call</span><b>${s.in_call.toLocaleString()}</b></div><div class="r"><span>Coverage</span><b>${(s.coverage * 100).toFixed(0)}%</b></div>` +
+      `<div class="r"><span>Result line first</span><b>${(s.verdict_first * 100).toFixed(0)}%</b></div><div class="r"><span>Over budget</span><b>${(s.over * 100).toFixed(0)}%</b></div>` +
+      `<div class="r"><span>Protected label</span><b>${(s.label * 100).toFixed(0)}%</b></div>`));
+    hit.addEventListener("mouseleave", hide);
+  });
+}
+function cats() {
+  const svg = document.getElementById("cats"); svg.innerHTML = "";
+  const C = D.models[model].cats, keys = Object.keys(C);
+  const Z = 250, W = 110;
+  const x = v => Z + W * Math.max(-100, Math.min(60, v)) / 100;
+  el("line", { x1: Z, x2: Z, y1: 0, y2: keys.length * 28, stroke: "var(--text-muted)", "stroke-width": 1 }, svg);
+  txt(svg, Z, keys.length * 28 + 16, "0", { "text-anchor": "middle", class: "muted" });
+  txt(svg, Z - W, keys.length * 28 + 16, "−100%", { "text-anchor": "middle", class: "muted" });
+  txt(svg, 366, -2, "Covered", { "text-anchor": "start", class: "muted" });
+  keys.forEach((k, i) => {
+    const c = C[k], y = i * 28 + 6, d = 100 * (c.out_full - c.out_off) / c.out_off;
+    txt(svg, 0, y + 12, CATN[k], { class: "strong" });
+    const x0 = Math.min(Z, x(d)), w = Math.abs(x(d) - Z);
+    el("rect", { x: x0, y, width: Math.max(2, w), height: 16, rx: 3, fill: d < 0 ? "var(--down)" : "var(--up)" }, svg);
+    txt(svg, d < 0 ? x0 - 6 : x0 + w + 6, y + 12, (d > 0 ? "+" : "−") + Math.abs(d).toFixed(0) + "%", { "text-anchor": d < 0 ? "end" : "start", class: "muted" });
+    const dc = (c.cov_full - c.cov_off) * 100;
+    const terse = c.terse_full >= 0.5;
+    const cv = txt(svg, 366, y + 12, `${(c.cov_off * 100).toFixed(0)} → ${(c.cov_full * 100).toFixed(0)}%${terse ? " · terse" : ""}`, {});
+    if (dc <= -10 || terse) cv.setAttribute("style", "fill:var(--bad);font-weight:600");
+    const hit = el("rect", { x: 0, y: y - 6, width: 480, height: 28, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", e => show(e, `<b>${CATN[k]}</b><div class="r"><span>Output tokens</span><b>${Math.round(c.out_off)} → ${Math.round(c.out_full)}</b></div>` +
+      `<div class="r"><span>Key points covered</span><b>${(c.cov_off * 100).toFixed(0)}% → ${(c.cov_full * 100).toFixed(0)}%</b></div>` +
+      `<div class="r"><span>Graded too terse</span><b>${(c.terse_full * 100).toFixed(0)}%</b></div>`));
+    hit.addEventListener("mouseleave", hide);
+  });
+}
+function draw() { kpis(); setups(); cats(); }
+segs("model", [["sonnet", "Sonnet"], ["haiku", "Haiku"]], model, k => { model = k; draw(); });
+segs("metric", Object.entries(METRICS).map(([k, m]) => [k, m.label]), metric, k => { metric = k; setups(); });
+draw();
+document.getElementById("theme").onclick = () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+};
+</script>
+</body>
+</html>

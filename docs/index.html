@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConciseClaude: Claude Code that gets to the point</title>
+<meta name="description" content="A Claude Code plugin for shorter answers with the same work behind them. Benchmarked: Opus replies 71% shorter at 30% lower cost.">
+<meta property="og:title" content="ConciseClaude">
+<meta property="og:description" content="Claude Code that gets to the point. Same work, a third of the words.">
+<meta property="og:image" content="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-light.png">
+<link rel="icon" href="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/icon.png">
+<style>
+:root { --bg:#f6f5f2; --card:#fff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#7a7973; --accent:#2a78d6; --code:#efeee9; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --accent:#5598e7; --code:#262624; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 56px 24px 64px; }
+header { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
+header img { width: 64px; height: 64px; }
+h1 { font-size: 40px; letter-spacing: -0.02em; margin: 0; }
+.tag { font-size: 22px; color: var(--ink2); margin: 10px 0 28px; }
+.hero { width: 100%; border-radius: 14px; border: 1px solid var(--border); display: block; }
+h2 { font-size: 20px; margin: 44px 0 10px; }
+pre { background: var(--code); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 14px/1.5 ui-monospace, Consolas, monospace; margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.card b { display: block; margin-bottom: 4px; }
+.card p { margin: 0; color: var(--ink2); font-size: 14.5px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.btn { display: inline-block; padding: 10px 16px; border-radius: 9px; text-decoration: none; font-weight: 600; font-size: 15px; }
+.primary { background: var(--accent); color: #fff; }
+.ghost { border: 1px solid var(--border); color: var(--ink); background: var(--card); }
+p.note { color: var(--muted); font-size: 14px; }
+footer { margin-top: 48px; color: var(--muted); font-size: 13.5px; }
+a { color: var(--accent); }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 32px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/icon.png" alt="">
+    <h1>ConciseClaude</h1>
+  </header>
+  <p class="tag">Claude Code that gets to the point. Same work, a third of the words.</p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-dark.png">
+    <img class="hero" src="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-light.png" alt="A default Claude Code reply of 3,018 characters next to the ConciseClaude reply of 500 characters to the same question.">
+  </picture>
+
+  <h2>Install</h2>
+  <pre>claude plugin marketplace add drknowhow/ConciseClaude
+claude plugin install conciseclaude@conciseclaude</pre>
+  <p class="note">Start a new session and it is on. Sonnet and Opus; Haiku sessions skip it.</p>
+
+  <h2>What you get</h2>
+  <div class="grid">
+    <div class="card"><b>Answer first</b><p>Every reply opens with the result. No preamble, no recap, no closing offer.</p></div>
+    <div class="card"><b>Depth when you ask</b><p>Say "in depth" and you get the full treatment. Errors, risks and safety steps are never cut.</p></div>
+    <div class="card"><b>Measured</b><p>A meter checks every reply and nudges Claude when it runs long. Code arrives without narration.</p></div>
+  </div>
+
+  <h2>Benchmarked</h2>
+  <p>522 replies on Sonnet, Opus and Haiku, graded blind against key-point checklists. On Opus, replies came out 71% shorter, cost fell 30% and answers arrived 42% sooner, while covering 93% of key points against 99% for the default.</p>
+  <div class="cta">
+    <a class="btn primary" href="benchmark/">Open the interactive benchmark</a>
+    <a class="btn ghost" href="https://github.com/drknowhow/ConciseClaude">View on GitHub</a>
+  </div>
+
+  <footer>Apache-2.0 · <a href="benchmark/4.0-findings.html">How 4.0 was tested and fixed</a> · <a href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-10-04-v5.md">Benchmark write-up</a></footer>
+</main>
+</body>
+</html>
