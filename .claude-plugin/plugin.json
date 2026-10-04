@@ -8,6 +8,7 @@
   "repository": "https://github.com/drknowhow/ConciseClaude",
   "documentationUrl": "https://github.com/drknowhow/ConciseClaude#readme",
   "supportUrl": "https://github.com/drknowhow/ConciseClaude/issues",
+  "privacyPolicyUrl": "https://github.com/drknowhow/ConciseClaude/blob/main/PRIVACY.md",
   "icon": "./assets/icon.png",
   "license": "Apache-2.0",
   "keywords": ["concise", "output-style", "token-efficiency", "cost", "productivity", "hooks", "code-review"]
