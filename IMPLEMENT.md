@@ -34,14 +34,17 @@ and asking.
      `~/.claude/commands/v.md`, `~/.claude/commands/u.md`,
      `~/.claude/skills/human-prose/`.
 
-2. **Rules.** Copy `output-styles/concise.md` → `~/.claude/output-styles/concise.md`.
+2. **Rules.** Copy `output-styles/concise.md` → `~/.claude/output-styles/concise.md`
+   and `rules/code.md` → `~/.claude/rules/code.md`.
 
 3. **One-turn stages.** Copy `commands/v.md` and `commands/u.md` → `~/.claude/commands/`.
 
 4. **Writing pass.** Copy `skills/human-prose/` → `~/.claude/skills/human-prose/`.
 
 5. **Meter**
-   - Copy `hooks/reply_shape.py` → `~/.claude/hooks/reply_shape.py`.
+   - Copy `hooks/reply_shape.py` and `hooks/code_rules.py` → `~/.claude/hooks/`.
+     `code_rules.py` adds `~/.claude/rules/code.md` to the context on a
+     session's first file edit.
    - Resolve an **absolute** path to Python 3.8 or newer. On Windows, don't use
      a `python.exe` under `WindowsApps`: that's the Store stub, and a hook that
      calls it fails silently. `py -3 -c "import sys; print(sys.executable)"`
@@ -65,8 +68,8 @@ and asking.
 6. **Wire settings.** Merge `settings-hooks.json` into `~/.claude/settings.json`:
    - Set `"outputStyle": "Concise"`. If a different style is already set, ask
      first.
-   - **Append** the `Stop` and `UserPromptSubmit` entries to any existing hook
-     arrays. Don't replace or reorder the user's existing hooks.
+   - **Append** the `Stop`, `UserPromptSubmit` and `PostToolUse` entries to any
+     existing hook arrays. Don't replace or reorder the user's existing hooks.
    - Replace `<PYTHON>` and `<HOOKS_DIR>` with absolute paths, using forward
      slashes, and keep the quotes.
    - Parse the file as JSON afterward to confirm it is still valid.
