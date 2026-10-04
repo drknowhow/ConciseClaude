@@ -70,6 +70,19 @@ def test_off_mode_still_logs_but_says_nothing(tmp_path):
     assert (tmp_path / "reply_shape.jsonl").exists()
 
 
+def test_haiku_sessions_are_neither_metered_nor_nudged(tmp_path):
+    def transcript(model):
+        path = tmp_path / f"{model}.jsonl"
+        path.write_text(json.dumps({"type": "assistant", "message": {"model": model, "content": [{"type": "text", "text": "x"}]}}), "utf-8")
+        return str(path)
+    haiku = {"session_id": "s4h", "transcript_path": transcript("claude-haiku-4-5")}
+    assert run("stop", {**haiku, "last_assistant_message": LONG}, tmp_path, "block") == ""
+    assert run("prompt", {**haiku, "prompt": "next"}, tmp_path, "nudge") == ""
+    assert not (tmp_path / "reply_shape.jsonl").exists()
+    sonnet = {"session_id": "s4s", "transcript_path": transcript("claude-sonnet-5-5")}
+    assert run("stop", {**sonnet, "last_assistant_message": LONG}, tmp_path, "block") != ""
+
+
 def test_verbose_stage_lasts_one_reply(tmp_path):
     run("prompt", {"session_id": "s5", "prompt": "/v explain the design"}, tmp_path, "block")
     assert run("stop", {"session_id": "s5", "last_assistant_message": LONG}, tmp_path, "block") == ""

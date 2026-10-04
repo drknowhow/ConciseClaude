@@ -5,10 +5,11 @@ Reads the hook payload on stdin. Prints the rules once per session id; later
 calls print nothing. Never fails the tool call.
 """
 import json
-import os
 import re
 import sys
 from pathlib import Path
+
+from reply_shape import out_of_scope, state_dir
 
 RULES = Path(__file__).resolve().parent.parent / "rules" / "code.md"
 
@@ -19,10 +20,9 @@ def main() -> int:
     except ValueError:
         return 0
     sid = re.sub(r"[^A-Za-z0-9_-]", "_", str(payload.get("session_id") or ""))[:80]
-    if not sid or not RULES.exists():
+    if not sid or not RULES.exists() or out_of_scope(payload):
         return 0
-    state = Path(os.environ.get("REPLY_SHAPE_DIR") or (Path.home() / ".claude" / "reply_shape")).expanduser()
-    marker = state / "code_rules" / sid
+    marker = state_dir() / "code_rules" / sid
     if marker.exists():
         return 0
     marker.parent.mkdir(parents=True, exist_ok=True)

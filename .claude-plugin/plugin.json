@@ -1,6 +1,6 @@
 {
   "name": "conciseclaude",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Answer-first reply rules (the Concise output style, on by default), a reply meter, one-turn /v and /u stages, a git diff meter, and the human-prose writing pass.",
   "author": { "name": "drknowhow" },
   "repository": "https://github.com/drknowhow/ConciseClaude",
