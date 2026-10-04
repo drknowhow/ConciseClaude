@@ -25,6 +25,12 @@ def test_rules_sent_once_per_session(tmp_path):
     assert run({"session_id": "b", "tool_name": "Edit"}, tmp_path) != ""
 
 
+def test_haiku_session_gets_no_rules(tmp_path):
+    transcript = tmp_path / "t.jsonl"
+    transcript.write_text(json.dumps({"type": "assistant", "message": {"model": "claude-haiku-4-5", "content": []}}), "utf-8")
+    assert run({"session_id": "h", "tool_name": "Write", "transcript_path": str(transcript)}, tmp_path) == ""
+
+
 def test_bad_payload_is_silent(tmp_path):
     env = {**os.environ, "REPLY_SHAPE_DIR": str(tmp_path)}
     proc = subprocess.run([sys.executable, str(SCRIPT)], input=b"not json", capture_output=True, env=env, timeout=30)

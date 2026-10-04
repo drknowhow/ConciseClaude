@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "5.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "5.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -31,6 +31,8 @@ BUDGETS: Dict[str, Optional[int]] = {
     "verbose": None,
 }
 MODES = ("off", "nudge", "block")
+# The rules target Sonnet and Opus; benchmarks found no saving on Haiku.
+SKIP_MODEL_RE = re.compile(r"haiku", re.I)
 DEFAULT_MODE = "nudge"  # used when no config exists; block is always explicit
 TAIL_BYTES = 1024 * 1024
 
@@ -263,7 +265,28 @@ def final_reply_from_transcript(path: str) -> str:
     return "\n\n".join(p for p in reversed(parts) if p.strip())
 
 
+def session_model(path: str) -> str:
+    """Model id on the newest assistant message in the transcript, or "" if none is readable."""
+    for line in reversed(_tail_lines(Path(path)) if path else []):
+        try:
+            ev = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(ev, dict) and ev.get("type") == "assistant":
+            model = (ev.get("message") or {}).get("model")
+            if isinstance(model, str) and model:
+                return model
+    return ""
+
+
+def out_of_scope(payload: Dict[str, Any]) -> bool:
+    """True when the session runs a model the rules don't cover (Haiku)."""
+    return bool(SKIP_MODEL_RE.search(session_model(str(payload.get("transcript_path") or ""))))
+
+
 def cmd_stop(payload: Dict[str, Any]) -> None:
+    if out_of_scope(payload):
+        return
     sid = str(payload.get("session_id") or "")
     text = payload.get("last_assistant_message")
     if not isinstance(text, str) or not text.strip():
@@ -291,7 +314,7 @@ def cmd_stop(payload: Dict[str, Any]) -> None:
 
 def cmd_prompt(payload: Dict[str, Any]) -> None:
     sid = str(payload.get("session_id") or "")
-    if not sid:
+    if not sid or out_of_scope(payload):
         return
     prompt = str(payload.get("prompt") or "")
     stage = next((name for name, rx in _STAGE_RES.items() if rx.search(prompt)), None)

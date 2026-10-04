@@ -18,6 +18,10 @@ is enabled, even if you've chosen another output style. To turn it off, run
 from Git Bash. Without Python the rules still apply; replies just aren't
 measured.
 
+The rules target Sonnet and Opus. Haiku sessions skip the meter, the nudge
+and the code rules, and the style tells Haiku to ignore it. Benchmarks found
+no saving on Haiku, because most of its output is hidden thinking.
+
 **Upgrade:** `claude plugin update conciseclaude@conciseclaude`, then restart.
 
 **Diff meter:** in each repo you want measured, run `/conciseclaude:diff-hooks`.

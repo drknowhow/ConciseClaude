@@ -10,6 +10,18 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 5.1.0 (2026-10-04)
+- **Sonnet and Opus only.** Haiku sessions skip the meter, the nudge and the
+  code rules: the hooks read the model off the session transcript and stand
+  down for Haiku. The style and the session pointer tell a Haiku model to
+  ignore them. No output-style setting can scope a style by model, so Haiku
+  still loads the style text (about 1,500 input tokens) and some replies come
+  out shorter than with no plugin.
+- **Why.** In a 435-reply Haiku benchmark the 5.0 style cut no cost (+15% in
+  one run, −4% in another) and left coverage flat: most Haiku output is
+  hidden thinking, which the style doesn't touch. Block mode raised cost by
+  19–28% and cut coverage.
+
 ## 5.0.0 (2026-10-04)
 Rule and scoring changes from a 448-reply benchmark against blind checklist
 grading. The plugin picks them up with `claude plugin update`. Manual installs
