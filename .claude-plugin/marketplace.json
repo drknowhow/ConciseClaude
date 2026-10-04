@@ -1,14 +1,15 @@
 {
   "name": "conciseclaude",
-  "owner": { "name": "drknowhow" },
+  "owner": { "name": "drknowhow", "url": "https://github.com/drknowhow" },
   "metadata": {
-    "description": "ConciseClaude: answer-first reply rules for Claude Code, with a reply meter."
+    "description": "ConciseClaude: Claude Code that gets to the point. Same work, a third of the words."
   },
   "plugins": [
     {
       "name": "conciseclaude",
+      "displayName": "ConciseClaude",
       "source": "./",
-      "description": "Concise output style, reply meter, /v and /u one-turn stages, diff meter, human-prose skill."
+      "description": "Answer-first replies, depth on request, safety steps never cut, code without narration, and a meter that keeps it measured. Opus: replies 71% shorter, 30% lower cost."
     }
   ]
 }

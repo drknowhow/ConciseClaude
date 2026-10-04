@@ -1,6 +1,6 @@
 ---
 name: Concise
-description: Answer first, fixed reply grammar, measured prose budget; code and commits without narration. Thinking and verification unchanged.
+description: ConciseClaude. Answer first, depth when asked, nothing important cut; code without narration. Same thinking and verification. Sonnet and Opus.
 keep-coding-instructions: true
 force-for-plugin: true
 ---
