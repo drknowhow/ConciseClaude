@@ -1,4 +1,2 @@
 ## Replies
-- Reply rules live in `~/.claude/output-styles/concise.md` (budget, grammar, cut list, never-cut list); code and commit rules in `~/.claude/rules/code.md`, added on the first file edit. If the Concise output style isn't active in a session, read both files and follow them anyway. They cover text the user reads and the code you write; subagent reports to a parent agent stay complete.
-- Don't add reply-length or tone rules anywhere else (project CLAUDE.md files, prompts). Change that file instead; two rule sets drift apart and the looser one wins.
-- Before shipping prose other people read (PR descriptions, docs, tickets, emails), run the `human-prose` skill.
+ConciseClaude: reply rules in `~/.claude/output-styles/concise.md`, code and repo-text rules in `~/.claude/rules/code.md` (added on the first file edit). Where the Concise style isn't active, read and follow both. Add no reply rules elsewhere. Run the `human-prose` skill before shipping prose others read.

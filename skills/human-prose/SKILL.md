@@ -1,6 +1,6 @@
 ---
 name: human-prose
-description: Use before shipping prose other people read — PR descriptions, review comments, docs, READMEs, tickets, emails, release notes. Revision pass that strips the writing habits readers flag in Claude's output (dense coined jargon, decorative metaphor, contrast framing, staged reveals, overclaiming, decorative formatting) so the text reads like a person wrote it.
+description: Use before shipping prose other people read (PR descriptions, review comments, docs, READMEs, tickets, emails, release notes). A revision pass that strips the habits readers flag in Claude's writing.
 ---
 
 # Human prose: revision pass

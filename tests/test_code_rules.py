@@ -20,7 +20,7 @@ def run(payload, state):
 def test_rules_sent_once_per_session(tmp_path):
     first = json.loads(run({"session_id": "a", "tool_name": "Write"}, tmp_path))
     assert first["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
-    assert "## Commit messages" in first["hookSpecificOutput"]["additionalContext"]
+    assert "## Commits" in first["hookSpecificOutput"]["additionalContext"]
     assert run({"session_id": "a", "tool_name": "Edit"}, tmp_path) == ""
     assert run({"session_id": "b", "tool_name": "Edit"}, tmp_path) != ""
 

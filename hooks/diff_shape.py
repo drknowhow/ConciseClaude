@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-__version__ = "6.1.1"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.2.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 MODES = ("off", "warn", "block")
 DEFAULT_MODE = "warn"

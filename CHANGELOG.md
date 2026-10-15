@@ -10,6 +10,18 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.2.0 (2026-10-15)
+Cost. The 6.1 benchmark found the plugin cheaper in conversation but dearer
+in coding and single cold calls, because its rule text adds input tokens to
+every session.
+- The style is 3,450 characters instead of 7,558 and the code rules 3,359
+  instead of 6,425, with the same rules. The session pointer is one
+  paragraph. A cold call now adds about 1,470 input tokens, down from 2,950.
+- New rule: answer every part of the question, including the distinction an
+  explanation turns on and the choice a plan depends on. In the 6.1
+  benchmark, rate-limiting plans skipped the algorithm and some
+  process-versus-thread answers skipped race conditions.
+
 ## 6.1.1 (2026-10-15)
 - The diff meter flags `## Summary`-style headings in commit messages passed
   with `-m` or `-F`, which is how Claude commits. It used to drop every line
