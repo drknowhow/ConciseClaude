@@ -10,6 +10,39 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.0.0 (2026-10-15)
+Rules against the writing habits readers complain about in Claude's output.
+The evidence, from four research passes and 45 days of our own transcripts,
+is in `docs/claude-slop-research-2026-10-15.md`. Update with
+`claude plugin update`.
+- The compact budget is 600 prose characters, up from 400. IDE replies
+  already had a median of 532 to 648 under the old budget, and asking for
+  brevity alone made Claude's text dense and cryptic. Labeled replies keep
+  900, `/u` keeps 150.
+- The first line is a bold plain-word tag and a plain verdict:
+  `**DONE**`, `**CAVEAT**`, `**BLOCKED**` or `**WORKING**`. The ✅ ⚠️ ❌ ⏳
+  glyphs and `▸` bullets are gone, and nothing else in a reply is bold
+  except the labels. The meter still recognises the old glyph line, so
+  rule sets that ask for it score the same.
+- A new "Write plainly" section in the style: cut points before words, keep
+  sentences whole, use the literal word in place of a decorative metaphor,
+  explain coined terms, state the positive claim, drop importance and
+  sincerity labels, tie completion claims to what ran.
+- The human-prose skill's cut list is reordered for current models: density,
+  metaphor, contrast framing and staging first, the older puffery word list
+  last.
+- The code rules ban emoji in code, comments and logs and unrequested
+  summary files, and hold PR descriptions to the problem, the behaviour and
+  the verification that ran.
+- The reply meter logs counts of writing tells per reply (metaphor, contrast
+  framing, salience and sincerity words, overclaiming, offers, arrows,
+  emoji, em-dashes, extra bold). The report shows rates per category. It
+  never nudges on them yet.
+- The README hero shows a real 6.0 reply from Opus 5.5: the median-length of
+  three runs of the benchmark's rebase question, all three free of counted
+  tells. The token and cost figures were measured on 5.x and haven't been
+  re-run on 6.0; the plugin description no longer quotes them.
+
 ## 5.1.0 (2026-10-04)
 - **Sonnet and Opus only.** Haiku sessions skip the meter, the nudge and the
   code rules: the hooks read the model off the session transcript and stand

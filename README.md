@@ -15,22 +15,27 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/hero-dark.png">
-  <img src="assets/hero-light.png" alt="The same question answered by default Claude Code in 3,018 characters and by ConciseClaude in 500.">
+  <img src="assets/hero-light.png" alt="The same question answered by default Claude Code in 3,018 characters and by ConciseClaude 6.0 in 680.">
 </picture>
 
-ConciseClaude is a Claude Code plugin that changes how much Claude **says**,
-not how much it reads, thinks or checks. Replies open with the answer, and
-the preamble, step-by-step narration and closing recap are gone. When you ask
-for depth you get it, and errors, risks and safety steps are never trimmed.
-Code comes without commentary, and a meter measures every reply so the rules
-don't drift.
+ConciseClaude is a Claude Code plugin that changes how much Claude says and
+how it says it. It leaves alone how much Claude reads, thinks and checks.
+Replies open with the answer in plain sentences, without the preamble,
+step-by-step narration and closing recap. Version 6 also targets the habits
+readers complain about in Claude's writing: dense coined jargon, decorative
+metaphors such as "load-bearing", "it's not X, it's Y" framing, staged
+reveals, emoji, and completion claims nobody checked. When you ask for depth
+you get it, and errors, risks and safety steps are never trimmed. Code comes
+without commentary, and a meter measures every reply so the rules don't
+drift.
 
-- **Shorter and faster.** On Opus, replies are 71% shorter, cost 30% less and
-  arrive 42% sooner. On Sonnet: 67% shorter, 6% cheaper, 15% sooner.
-- **Still complete.** A blind grader found 93–94% of the key points a full
-  answer covers, against 98–99% for the default.
-- **Measured.** A Stop hook scores every reply and nudges Claude when one runs
-  long. `/conciseclaude:meter report` shows how it's doing.
+In the 5.x benchmark, Opus replies were 71% shorter, cost 30% less and
+arrived 42% sooner; Sonnet replies were 67% shorter, 6% cheaper and 15%
+sooner. A blind grader found 93–94% of the key points a full answer covers,
+against 98–99% for the default. Those figures predate 6.0, which allows 600
+characters per reply instead of 400, and haven't been re-run yet. A Stop hook
+scores every reply and nudges Claude when one runs long;
+`/conciseclaude:meter report` shows how it's doing.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.png">
@@ -84,10 +89,10 @@ history carries over.
 ## What's in it
 | Part | File | Job |
 |---|---|---|
-| Rules | `output-styles/concise.md` | The only copy of the reply rules: budget, reply grammar, cut list, never-cut list. Loads into the system prompt. |
+| Rules | `output-styles/concise.md` | The only copy of the reply rules: budget, reply grammar, plain-writing rules, cut list, never-cut list. Loads into the system prompt. |
 | Code rules | `rules/code.md`, `hooks/code_rules.py` | Code, test and commit rules. A PostToolUse hook adds them on a session's first file edit, so chat-only sessions don't pay for them. |
 | Pointer | `hooks/session_start.sh` | Prints the rules pointer at session start, so subagents and other surfaces find the rules and nobody writes a second set. `claude-md-snippet.md` is the same text for manual installs. |
-| Meter | `hooks/reply_shape.py` | Stop hook measures each final reply. Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
+| Meter | `hooks/reply_shape.py` | Stop hook measures each final reply and counts writing tells (decorative metaphor, contrast framing, emoji and others; logged, never nudged). Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
 | Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
 | Plugin | `.claude-plugin/`, `hooks/hooks.json` | Manifest, one-plugin marketplace, and hook wiring. |
@@ -99,14 +104,37 @@ history carries over.
 
 ## What a reply looks like
 ```
-✅ Fixed: token expiry compared naive local time against UTC.
-auth/middleware.py:42 now uses datetime.now(timezone.utc); 118 tests pass.
-Need you: ship to staging now, or wait for the Monday window?
+**DONE** Token expiry was comparing local time with UTC; it now uses UTC.
+auth/middleware.py:42 calls datetime.now(timezone.utc). The 118 unit tests
+pass; I didn't run the browser tests.
+**Need you:** ship to staging now, or wait for the Monday window?
 ```
-Result line first with a status glyph. Detail only if it changes your next
-move. Literals verbatim. **Need you:** last, and only when Claude is blocked on
-you. Security, destructive commands, errors, and plans get 900 chars, but only
-under a visible label like **Risk:** or **Plan:**.
+The result comes first, after a plain-word tag (DONE, CAVEAT, BLOCKED or
+WORKING). Detail follows only if it changes your next move, in complete
+sentences. Literals are verbatim. **Need you:** comes last, and only when
+Claude is blocked on you. A compact reply gets 600 prose characters.
+Security, destructive commands, errors, and plans get 900, but only under a
+visible label like **Risk:** or **Plan:**.
+
+## Plain writing
+Version 6.0 adds rules against the writing habits readers flag in Claude's
+output. They come from four research passes and 45 days of transcripts
+([write-up](docs/claude-slop-research-2026-10-15.md)). On current models
+most of these habits are in how sentences are built, and few are about
+vocabulary:
+- text compressed until it needs a second read, with labels nobody defined;
+- metaphors in place of plain words ("load-bearing", "seam", "earns its
+  keep");
+- "it's not X, it's Y" framing, and rebuttals of points nobody made;
+- a point held back for the last line, "this matters", "honestly";
+- bold on every bullet, emoji and status symbols;
+- "production-ready" or "fully verified" when one test suite ran.
+
+The rules name each pattern and give the replacement: cut points instead of
+words, use the literal word, say what was checked and what wasn't. The
+`human-prose` skill applies the same list to PR descriptions, docs and
+email. The meter counts the patterns in every reply and `report` shows the
+rates, so the next release can show whether they fell.
 
 ## What code looks like
 The same rule set covers the code Claude writes: a reviewer has about ten
@@ -129,6 +157,10 @@ Each point comes from running an earlier version of this system.
   and a phone. Prose characters outside code and URLs track what you actually
   read. Table cells count too: moving text into a table doesn't make it
   shorter to read.
+- **Room for whole sentences.** Under the 400-character budget, IDE replies
+  had a median of 532 to 648 characters, and the squeezed text was hard to
+  read: a model asked only for brevity drops articles and coins shorthand.
+  6.0 raised the budget to 600 and added rules that keep sentences whole.
 - **Exceptions are bounded and labeled.** An open-ended "never compress
   security, errors, planning, review" list covered most real work, so most
   replies qualified. Now the exception has a 900-char ceiling and needs a label,
@@ -172,8 +204,8 @@ saves. Reproduce with `python bench/ab.py`.
 | Rules + grammar + nudge | 532 | 55% | 21% |
 
 Read this as a trend, not a controlled test: the two phases had different
-session mixes. The nudge helped, but IDE replies still ran over budget more
-often than not. Labels weren't being gamed (8% of replies), but 70% of labeled
+session mixes. The nudge helped, but IDE replies still ran over the
+400-character budget of the time more often than not. Labels weren't being gamed (8% of replies), but 70% of labeled
 replies went past 900 anyway. If nudge isn't enough, switch to block.
 
 The original version measured length only. This one also records when your
@@ -188,7 +220,7 @@ version reads the reply Claude Code hands the hook directly.
 
 ## Operating it
 ```
-/conciseclaude:meter report --days 7        # median, p90, % over, asked_more, asked_shorter
+/conciseclaude:meter report --days 7        # median, p90, % over, asked_more, asked_shorter, writing-tell rates
 /conciseclaude:meter mode block             # off | nudge (default) | block
 /conciseclaude:meter diff report --days 7   # the diff meter's report
 ```
@@ -197,8 +229,8 @@ A manual install runs the same thing as `python ~/.claude/hooks/reply_shape.py r
 - Rules: `output-styles/concise.md`, nowhere else. The plugin's copy is
   replaced on every update, so change the rules in a fork or a PR here, not in
   the plugin cache.
-- Privacy: the log stores sizes, flags, and a 12-character hash per reply. No
-  reply text.
+- Privacy: the log stores sizes, flags, writing-tell counts and a
+  12-character hash per reply. No reply text.
 - Off switch: `mode off` stops all feedback but keeps measuring. Removing the
   two hook entries stops measuring too.
 
@@ -212,8 +244,8 @@ sends no telemetry.
   a reply finishes, `reply_shape.py` measures the reply. After the first file
   edit in a session, `code_rules.py` adds the code rules. In Haiku sessions
   these hooks return without doing anything.
-- **Stores:** `~/.claude/reply_shape/` holds the reply log (sizes, flags and a
-  12-character hash per reply, never the reply text), the mode setting and
+- **Stores:** `~/.claude/reply_shape/` holds the reply log (sizes, flags,
+  writing-tell counts and a 12-character hash per reply, never the reply text), the mode setting and
   small per-session markers. If you install the diff meter, it also uses
   `~/.claude/diff_shape/` (counts only, never code) and a copy of its script
   in `~/.claude/conciseclaude/`.

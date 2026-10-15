@@ -23,6 +23,7 @@ h1 { font-size: 46px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.
 .msg h { display: block; font-weight: 700; color: var(--ink); font-size: 14px; margin: 2px 0 6px; }
 .msg pre { font: 11px/1.35 Consolas, "Cascadia Mono", monospace; background: var(--code); border-radius: 6px; padding: 7px 8px; margin: 6px 0; white-space: pre; color: var(--ink); }
 .msg .v { font-weight: 700; color: var(--ink); }
+.msg code { white-space: nowrap; }
 .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 170px; background: linear-gradient(to bottom, transparent, var(--card) 80%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 16px; font-size: 12.5px; color: var(--muted); }
 </style></head>
 <body><div class="wrap">
@@ -35,7 +36,7 @@ h1 { font-size: 46px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.
       <div class="stat"><b>−30%</b><span>cost</span></div>
       <div class="stat"><b>−42%</b><span>wait time</span></div>
     </div>
-    <p class="foot">Opus, 522-reply benchmark, graded blind. Sonnet: −67% / −6% / −15%.</p>
+    <p class="foot">Opus, 522-reply benchmark of 5.x, graded blind. Sonnet: −67% / −6% / −15%.</p>
   </div>
   <div class="right">
     <div class="card">
@@ -52,13 +53,13 @@ D---E---F---G  main</pre><h>Trade-offs</h>History: accurate, non-linear vs linea
       <div class="fade">… and 2,000 more characters</div>
     </div>
     <div class="card short">
-      <div class="hd"><b>ConciseClaude</b><span>500 characters</span></div>
-      <div class="msg"><span class="v">✅ Merge preserves history; rebase rewrites it.</span>
-<pre>merge:   A-B-C-----M      rebase:  A-B-C-D'-E'
-              \   /
-               D-E</pre>▸ Merge: adds a merge commit; existing commits are untouched.
-▸ Rebase: replays your commits onto a new base as new commits (new hashes), so history stays linear.
-▸ Dangerous on commits others already have: histories diverge, it needs a force-push, and work gets duplicated or lost. Rebase only local branches; otherwise <code>git push --force-with-lease</code>.</div>
+      <div class="hd"><b>ConciseClaude 6.0</b><span>680 characters</span></div>
+      <div class="msg"><span class="v">DONE</span> Both bring one branch's changes into another, but they record history differently.
+
+- Merge leaves existing commits untouched and adds a merge commit with two parents, so the history shows where the branches split and joined.
+- Rebase replays your commits one at a time onto the new base. This creates new commits with new hashes and produces a straight, linear history.
+
+Rebase is dangerous on commits that others already have. Their clones still point to the old hashes, so pulling produces duplicate commits. A force-push can also erase work they pushed in the meantime. Rebase only commits you haven't shared, and push with <code>--force-with-lease</code> rather than <code>--force</code>.</div>
     </div>
   </div>
 </div></body></html>

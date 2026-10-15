@@ -13,7 +13,7 @@ _spec = importlib.util.spec_from_file_location("reply_shape", SCRIPT)
 rs = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(rs)
 
-LONG = "word " * 120  # 599 prose chars
+LONG = "word " * 160  # 799 prose chars
 
 
 def run(cmd, payload, state, mode):
@@ -40,8 +40,18 @@ def test_label_selects_protected_budget():
 
 
 def test_verdict_and_need_you_detected():
-    shape = rs.measure("✅ **Done.**\nDetail.\n**Need you:** pick A or B")
+    shape = rs.measure("**DONE** Merged.\nDetail.\n**Need you:** pick A or B")
     assert shape["verdict_first"] and shape["need_you_last"]
+    assert rs.measure("✅ **Done.**")["verdict_first"]
+    assert not rs.measure("Done.")["verdict_first"] and not rs.measure("**Done** lowercase")["verdict_first"]
+
+
+def test_tells_are_counted_outside_code_and_sanctioned_bold():
+    text = ("**DONE** The cache is load-bearing. It's not a bug, it's a contract. Honestly, this matters.\n"
+            "**Risk:** none. **Also** see `a → b` — ✅\n```\nload-bearing → — **x**\n```\n**Need you:** ship?")
+    assert rs.measure(text)["tells"] == {"metaphor": 1, "contrast": 1, "sincerity": 1, "salience": 1,
+                                         "bold": 1, "em_dash": 1, "emoji": 1}
+    assert rs.measure("**DONE** Merged #12; the parser tests pass.")["tells"] == {}
 
 
 def test_block_mode_refuses_once(tmp_path):
@@ -60,7 +70,7 @@ def test_nudge_fires_once_per_overage(tmp_path):
 
 
 def test_short_reply_is_silent(tmp_path):
-    run("stop", {"session_id": "s3", "last_assistant_message": "✅ **ok**"}, tmp_path, "block")
+    run("stop", {"session_id": "s3", "last_assistant_message": "**DONE** ok"}, tmp_path, "block")
     assert run("prompt", {"session_id": "s3", "prompt": "next"}, tmp_path, "nudge") == ""
 
 
@@ -105,7 +115,7 @@ def test_plugin_namespaced_stages(tmp_path):
 
 
 def test_plain_ask_for_depth_lifts_budget_without_a_followup_signal(tmp_path):
-    run("stop", {"session_id": "s6d", "last_assistant_message": "✅ **ok**"}, tmp_path, "block")
+    run("stop", {"session_id": "s6d", "last_assistant_message": "**DONE** ok"}, tmp_path, "block")
     run("prompt", {"session_id": "s6d", "prompt": "Explain TCP congestion control in depth."}, tmp_path, "block")
     assert run("stop", {"session_id": "s6d", "last_assistant_message": LONG}, tmp_path, "block") == ""
     rows = [json.loads(x) for x in (tmp_path / "reply_shape.jsonl").read_text("utf-8").splitlines()]
@@ -117,12 +127,14 @@ def test_code_requests_do_not_lift_budget(tmp_path):
     assert run("stop", {"session_id": "s6e", "last_assistant_message": LONG}, tmp_path, "block") != ""
 
 
-def test_report_states_label_share(tmp_path):
-    run("stop", {"session_id": "s6f", "last_assistant_message": "**Plan:** ship it"}, tmp_path, "off")
-    run("stop", {"session_id": "s6f", "last_assistant_message": "✅ **ok**"}, tmp_path, "off")
+def test_report_states_label_share_and_tell_rates(tmp_path):
+    run("stop", {"session_id": "s6f", "last_assistant_message": "**Plan:** ship it, honestly"}, tmp_path, "off")
+    run("stop", {"session_id": "s6f", "last_assistant_message": "**DONE** ok"}, tmp_path, "off")
     env = {**os.environ, "REPLY_SHAPE_DIR": str(tmp_path)}
-    rep = subprocess.run([sys.executable, str(SCRIPT), "report", "--json"], capture_output=True, env=env, timeout=30)
-    assert json.loads(rep.stdout)["label_pct"] == 50
+    rep = json.loads(subprocess.run([sys.executable, str(SCRIPT), "report", "--json"], capture_output=True,
+                                    env=env, timeout=30).stdout)
+    assert rep["label_pct"] == 50
+    assert rep["tells"] == {"sincerity": {"per_100": 50.0, "pct": 50}}
 
 
 def test_transcript_fallback_reads_final_reply(tmp_path):
@@ -138,9 +150,9 @@ def test_transcript_fallback_reads_final_reply(tmp_path):
 
 
 def test_followup_signal_is_logged_and_reported(tmp_path):
-    run("stop", {"session_id": "s7", "last_assistant_message": "✅ **ok**"}, tmp_path, "nudge")
+    run("stop", {"session_id": "s7", "last_assistant_message": "**DONE** ok"}, tmp_path, "nudge")
     run("prompt", {"session_id": "s7", "prompt": "/v what do you mean by that?"}, tmp_path, "nudge")
-    run("stop", {"session_id": "s7", "last_assistant_message": "✅ **ok, longer**"}, tmp_path, "nudge")
+    run("stop", {"session_id": "s7", "last_assistant_message": "**DONE** ok, longer"}, tmp_path, "nudge")
     run("prompt", {"session_id": "s7", "prompt": "thanks"}, tmp_path, "nudge")
     run("stop", {"session_id": "s7", "last_assistant_message": LONG}, tmp_path, "nudge")
     out = run("prompt", {"session_id": "s7", "prompt": "/u tl;dr please"}, tmp_path, "nudge")
@@ -154,7 +166,7 @@ def test_followup_signal_is_logged_and_reported(tmp_path):
 
 def test_plain_prompt_logs_no_signal(tmp_path):
     # Issue #3: requests about the code are not feedback about the reply.
-    run("stop", {"session_id": "s8", "last_assistant_message": "✅ **ok**"}, tmp_path, "off")
+    run("stop", {"session_id": "s8", "last_assistant_message": "**DONE** ok"}, tmp_path, "off")
     for prompt in ["now fix the parser", "explain this function", "make the loop shorter",
                    "explain why the test fails", "can you elaborate on the retry path", "too long, tl;dr"]:
         run("prompt", {"session_id": "s8", "prompt": prompt}, tmp_path, "off")
@@ -176,9 +188,9 @@ def test_table_cells_count_as_prose():
 def test_label_must_be_bold():
     # Issue #2: an unformatted word, or a quoted log line, does not buy 900.
     for text in ["Plan: do the thing.", "plan: lowercase too.", "Risk: none.",
-                 "✅ **Done.**\nThe server said:\nERROR: bind failed"]:
-        assert rs.measure(text)["budget"] == 400, text
-    for text in ["**Plan:** do it", "⚠️ **Risk:** data loss", "✅ **Done.**\n\n⚠️ **Risk: live data touched.** Detail.",
+                 "**DONE** The server said:\nERROR: bind failed"]:
+        assert rs.measure(text)["budget"] == 600, text
+    for text in ["**Plan:** do it", "⚠️ **Risk:** data loss", "**DONE** Merged.\n\n**Risk: live data touched.** Detail.",
                  "**error:** lower case is fine"]:
         assert rs.measure(text)["budget"] == 900, text
 

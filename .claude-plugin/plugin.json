@@ -1,8 +1,8 @@
 {
   "name": "conciseclaude",
   "displayName": "ConciseClaude",
-  "version": "5.1.0",
-  "description": "Claude Code that gets to the point: answer-first replies, depth when you ask for it, safety steps never cut, and code without narration. A meter keeps it honest. Benchmarked on Opus: replies 71% shorter, 30% lower cost.",
+  "version": "6.0.0",
+  "description": "Claude Code that gets to the point in plain sentences: answer-first replies, depth when you ask for it, safety steps never cut, code without narration, and rules against the writing habits readers flag in Claude's output. A meter keeps it honest.",
   "author": { "name": "drknowhow", "url": "https://github.com/drknowhow" },
   "homepage": "https://drknowhow.github.io/ConciseClaude/",
   "repository": "https://github.com/drknowhow/ConciseClaude",
