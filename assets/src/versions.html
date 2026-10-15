@@ -1,0 +1,87 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root { --bg:#f6f5f2; --card:#ffffff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8984; --s:#2a78d6; --o:#eb6834; --grid:#ecebe6; --base:#b9b7b0; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --s:#3987e5; --o:#d95926; --grid:#2a2a27; --base:#5a5954; } }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1280px; height: 510px; background: var(--bg); color: var(--ink); font: 16px/1.4 "Segoe UI", system-ui, sans-serif; }
+.wrap { padding: 30px 44px; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
+h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.legend { display: flex; gap: 18px; font-size: 14px; color: var(--ink2); }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 16px 8px; }
+.card h3 { font-size: 15px; font-weight: 600; }
+.card p { font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
+svg text { font: 12px "Segoe UI", system-ui, sans-serif; }
+.note { color: var(--muted); font-size: 12.5px; margin-top: 12px; line-height: 1.45; }
+</style></head>
+<body><div class="wrap">
+  <div class="top">
+    <div><h2>Version over version</h2><p class="sub">Each bar compares ConciseClaude with default Claude Code in the same benchmark run.</p></div>
+    <div class="legend"><span><i class="sw" style="background:var(--o)"></i>Opus</span><span><i class="sw" style="background:var(--s)"></i>Sonnet</span></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="note">4.0 and 5.0: 2026-10-04 benchmark. 6.1 and 6.2: 2026-10-15 benchmark on Opus 5.5 and Sonnet 5.5, with a different question set and grader, so coverage compares within a run, not across the two. 4.0's output was not reported. Tells: bold spans, emoji, arrows, decorative metaphors and similar, per single-turn reply. On Haiku 5.5, 6.2 cost 10% more than default and 6.3 breaks even.</p>
+</div>
+<script>
+const panels = [
+  { title: "Cost", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2"],
+    opus: [-24, -30, -8, -23], sonnet: [-4, -6, 9, -13], min: -40, max: 20, step: 20, unit: "%" },
+  { title: "Output tokens", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2"],
+    opus: [null, -57, -47, -48], sonnet: [null, -37, -25, -36], min: -60, max: 0, step: 20, unit: "%" },
+  { title: "Key points covered", sub: "points behind default, nearer 0 is better", x: ["4.0", "5.0", "6.1", "6.2"],
+    opus: [-6, -6, -12, -11], sonnet: [-11, -4, -18, -12], min: -20, max: 0, step: 5, unit: "" },
+  { title: "Writing tells", sub: "per reply, lower is better", x: ["default", "5.1", "6.1", "6.2"],
+    opus: [9.5, 5.7, 0, 0.1], sonnet: [7.3, 4.3, 0.1, 0.8], min: 0, max: 10, step: 5, unit: "" },
+];
+const W = 250, H = 250, L = 40, R = 28, T = 16, B = 26, BAR = 14, GAP = 2;
+const ns = "http://www.w3.org/2000/svg";
+function el(name, attrs, text) {
+  const e = document.createElementNS(ns, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function fmt(v, unit) { return (v > 0 && unit === "%" ? "+" : v < 0 ? "−" : "") + Math.abs(v) + unit; }
+for (const p of panels) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<h3>${p.title}</h3><p>${p.sub}</p>`;
+  const svg = el("svg", { width: W, height: H });
+  const y = v => T + (p.max - v) / (p.max - p.min) * (H - T - B);
+  for (let v = p.min; v <= p.max; v += p.step) {
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: v === 0 ? "var(--base)" : "var(--grid)", "stroke-width": 1 }));
+    svg.append(el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", fill: "var(--muted)" }, fmt(v, p.unit)));
+  }
+  const slot = (W - L - R) / p.x.length;
+  p.x.forEach((label, i) => {
+    const cx = L + slot * (i + 0.5);
+    svg.append(el("text", { x: cx, y: H - 6, "text-anchor": "middle", fill: "var(--ink2)" }, label));
+    if (p.opus[i] === null) {
+      svg.append(el("text", { x: cx, y: y(0) + 16, "text-anchor": "middle", fill: "var(--muted)" }, "n/a"));
+      return;
+    }
+    [["opus", "var(--o)", -1], ["sonnet", "var(--s)", 1]].forEach(([key, color, side]) => {
+      const v = p[key][i];
+      const x = side < 0 ? cx - GAP / 2 - BAR : cx + GAP / 2;
+      const top = Math.min(y(v), y(0)), h = Math.max(Math.abs(y(v) - y(0)), 1.5);
+      const r = Math.min(4, h / 2), down = v < 0, x2 = x + BAR, y0 = down ? top : top + h, y1 = down ? top + h : top;
+      const d = down
+        ? `M${x},${y0} H${x2} V${y1 - r} Q${x2},${y1} ${x2 - r},${y1} H${x + r} Q${x},${y1} ${x},${y1 - r} Z`
+        : `M${x},${y0} V${y1 + r} Q${x},${y1} ${x + r},${y1} H${x2 - r} Q${x2},${y1} ${x2},${y1 + r} V${y0} Z`;
+      svg.append(el("path", { d, fill: color }));
+      if (i === p.x.length - 1) {
+        const ty = down ? y(v) + 14 : y(v) - 5;
+        const lx = side < 0 ? x + BAR : x;
+        svg.append(el("text", { x: lx, y: ty, "text-anchor": side < 0 ? "end" : "start", fill: "var(--ink)", "font-weight": 600 }, fmt(v, p.unit)));
+      }
+    });
+  });
+  card.append(svg);
+  document.getElementById("grid").append(card);
+}
+</script>
+</body></html>

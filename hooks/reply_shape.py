@@ -21,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "6.3.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.3.1"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -77,8 +77,7 @@ _STAGE_RES = {
 # Only the explicit stages count: "explain this" or "shorter" refer to the code
 # at least as often as to the reply.
 _FOLLOWUP_SIGNALS = {"verbose": "more", "ultra": "shorter"}
-# Writing tells from docs/claude-slop-research-2026-10-15.md, counted on prose with code and
-# URLs removed. Logged and reported only; nothing nudges on them until a category proves precise.
+# Writing tells, counted on prose with code and URLs removed. Logged and reported, never nudged on.
 TELLS: Dict[str, "re.Pattern[str]"] = {
     "metaphor": re.compile(
         r"\bload[- ]bearing\b|\bseams?\b|\bearns? (?:its|their) (?:keep|place)\b|"

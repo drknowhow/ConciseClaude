@@ -10,6 +10,15 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.3.1 (2026-10-15)
+- The manual install's PostToolUse hook now matches C3's `c3_edit`, as the
+  plugin's has since 6.1, so code rules load there too.
+- README: a chart of each release against the default, plain sentences in
+  place of bold-label bullets, a shorter Evidence section, and the 3.x
+  migration steps moved to `IMPLEMENT.md`. `IMPLEMENT.md` now lists all
+  three hook entries to remove on uninstall and runs every test file.
+- The Pages site leads with the 6.2 benchmark write-up.
+
 ## 6.3.0 (2026-10-15)
 - Haiku gets the whole rule set: the style no longer tells Haiku to ignore
   it, and the meter, the nudge and the code rules run in Haiku sessions. On

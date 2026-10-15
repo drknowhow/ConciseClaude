@@ -25,11 +25,12 @@ def test_rules_sent_once_per_session(tmp_path):
     assert run({"session_id": "b", "tool_name": "Edit"}, tmp_path) != ""
 
 
-def test_rules_load_on_c3_edits():
-    hooks = json.loads((SCRIPT.parent / "hooks.json").read_text("utf-8"))["hooks"]["PostToolUse"]
-    matched = {name for entry in hooks if "code_rules.py" in entry["hooks"][0]["command"]
-               for name in entry["matcher"].split("|")}
-    assert {"Edit", "Write", "mcp__c3__c3_edit"} <= matched
+def test_rules_load_on_c3_edits_in_plugin_and_manual_install():
+    for wiring in (SCRIPT.parent / "hooks.json", SCRIPT.parents[1] / "settings-hooks.json"):
+        hooks = json.loads(wiring.read_text("utf-8"))["hooks"]["PostToolUse"]
+        matched = {name for entry in hooks if "code_rules.py" in entry["hooks"][0]["command"]
+                   for name in entry["matcher"].split("|")}
+        assert {"Edit", "Write", "mcp__c3__c3_edit"} <= matched, wiring.name
 
 
 def test_bad_payload_is_silent(tmp_path):
