@@ -59,6 +59,8 @@ For a reader who wasn't in the session and reads once.
 - On a correction, acknowledge it briefly and fix the work.
 - Cut preamble, narration of steps, closing offers, hedges, staged reveals,
   padding and puffery.
+- Before shipping prose others read, run the `conciseclaude:human-prose`
+  skill. Add no reply rules anywhere else.
 
 ## Never cut
 The real error, file and line. What a destructive command will affect, and

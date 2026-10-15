@@ -14,9 +14,13 @@ this file disagree with it.
 Cost. The 6.1 benchmark found the plugin cheaper in conversation but dearer
 in coding and single cold calls, because its rule text adds input tokens to
 every session.
-- The style is 3,450 characters instead of 7,558 and the code rules 3,359
-  instead of 6,425, with the same rules. The session pointer is one
-  paragraph. A cold call now adds about 1,470 input tokens, down from 2,950.
+- The style is about 3,600 characters instead of 7,558 and the code rules
+  3,359 instead of 6,425, with the same rules. The session-start pointer is
+  gone: subagents never received it, and the forced style now carries its
+  human-prose reminder. A cold call adds about 1,225 input tokens, down from
+  2,950.
+- In the benchmark, 6.2 costs 23% less than default on Opus and 13% less on
+  Sonnet (6.1: 8% less and 9% more), and covers 85% of key points (6.1: 82%).
 - New rule: answer every part of the question, including the distinction an
   explanation turns on and the choice a plan depends on. In the 6.1
   benchmark, rate-limiting plans skipped the algorithm and some
