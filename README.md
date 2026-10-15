@@ -57,9 +57,9 @@ is enabled, even if you've chosen another output style. To turn it off, run
 from Git Bash. Without Python the rules still apply; replies just aren't
 measured.
 
-The rules target Sonnet and Opus. Haiku sessions skip the meter, the nudge
-and the code rules, and the style tells Haiku to ignore it. Benchmarks found
-no saving on Haiku, because most of its output is hidden thinking.
+The rules apply to Opus, Sonnet and Haiku. On Haiku 5.5 the plugin breaks
+even on cost: most of Haiku's output is hidden thinking, which the style
+doesn't shorten, so the saving on replies only pays for the rule text.
 
 **Upgrade:** `claude plugin update conciseclaude@conciseclaude`, then restart.
 
@@ -252,8 +252,7 @@ sends no telemetry.
   which starts the first Python 3.8+ it finds. At session start,
   `session_start.sh` refreshes the diff meter's copy. When you send a prompt and when
   a reply finishes, `reply_shape.py` measures the reply. After the first file
-  edit in a session, `code_rules.py` adds the code rules. In Haiku sessions
-  these hooks return without doing anything.
+  edit in a session, `code_rules.py` adds the code rules.
 - **Stores:** `~/.claude/reply_shape/` holds the reply log (sizes, flags,
   writing-tell counts and a 12-character hash per reply, never the reply text), the mode setting and
   small per-session markers. If you install the diff meter, it also uses
