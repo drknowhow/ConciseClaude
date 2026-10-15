@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-__version__ = "6.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.1.1"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 MODES = ("off", "warn", "block")
 DEFAULT_MODE = "warn"
@@ -218,11 +218,15 @@ def analyze_diff(text: str, blob_for: Callable[[str], Optional[str]] = lambda p:
 
 _TRAILER_RE = re.compile(r"^[A-Za-z][A-Za-z-]+: \S")
 _HEADING_RE = re.compile(r"^(?:#{1,6}\s|\*\*[^*]+\*\*:?\s*$|[A-Z][A-Z' ,/-]{3,}[.:]\s*$)")
-_TRANSCRIPT_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Ran|Tested|Verified|Passed|Verification)\b|^\s*(?:\$ |pytest\b|npm (?:test|run)\b)")
+# One line saying what verification ran is wanted; a second such line, or pasted command output, is a transcript.
+_VERIFY_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Ran|Tested|Verified|Passed|Verification)\b")
+_COMMAND_RE = re.compile(r"^\s*(?:\$ |pytest\b|npm (?:test|run)\b)")
 
 
 def analyze_message(text: str) -> Dict[str, Any]:
-    lines = [l.rstrip() for l in text.splitlines() if not l.startswith("#")]
+    # Git strips '#' lines only from an edited message, which carries this template; -m and -F keep them.
+    edited = "# Please enter the commit message" in text
+    lines = [l.rstrip() for l in text.splitlines() if not (edited and l.startswith("#"))]
     while lines and not lines[-1].strip():
         lines.pop()
     while lines and _TRAILER_RE.match(lines[-1]):
@@ -235,10 +239,11 @@ def analyze_message(text: str) -> Dict[str, Any]:
         findings.append(_finding("warn", "long-subject", "", 1, f"{len(subject)} chars"))
     if len(body) > LIMITS["body_lines"]:
         findings.append(_finding("warn", "long-body", "", None, f"{len(body)} body lines, budget {LIMITS['body_lines']}"))
+    verify_lines = 0
     for i, l in enumerate(body, 2):
         if _HEADING_RE.match(l.strip()):
             findings.append(_finding("fail", "headed-section", "", i, l.strip()))
-        elif _TRANSCRIPT_RE.match(l):
+        elif _COMMAND_RE.match(l) or (_VERIFY_RE.match(l) and (verify_lines := verify_lines + 1) > 1):
             findings.append(_finding("warn", "transcript", "", i, l.strip()))
     return {"subject_chars": len(subject), "body_lines": len(body), "findings": findings,
             "ok": not any(f["level"] == "fail" for f in findings)}

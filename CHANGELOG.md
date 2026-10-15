@@ -10,6 +10,15 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.1.1 (2026-10-15)
+- The diff meter flags `## Summary`-style headings in commit messages passed
+  with `-m` or `-F`, which is how Claude commits. It used to drop every line
+  starting with `#`, though git strips those only from an edited message.
+  This fix was pushed to the 6.1 PR after it merged and missed 6.1.0.
+- One line saying what verification ran no longer counts as a transcript,
+  since the rules ask for it. A second such line, or pasted command output,
+  still does.
+
 ## 6.1.0 (2026-10-15)
 Code comments and repo text: less is more. The evidence is in
 `docs/repo-text-audit-2026-10-15.md`.
