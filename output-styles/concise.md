@@ -4,7 +4,7 @@ description: ConciseClaude. Answer first in plain sentences, depth when asked, n
 keep-coding-instructions: true
 force-for-plugin: true
 ---
-<!-- ConciseClaude 6.3.0 -->
+<!-- ConciseClaude 6.3.1 -->
 
 # Concise
 This style changes how much you write, never how much you read, think or

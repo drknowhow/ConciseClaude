@@ -34,15 +34,15 @@ and asking.
      `~/.claude/commands/v.md`, `~/.claude/commands/u.md`,
      `~/.claude/skills/human-prose/`.
 
-2. **Rules.** Copy `output-styles/concise.md` → `~/.claude/output-styles/concise.md`
-   and `rules/code.md` → `~/.claude/rules/code.md`.
+2. **Rules.** Copy `output-styles/concise.md` to `~/.claude/output-styles/concise.md`
+   and `rules/code.md` to `~/.claude/rules/code.md`.
 
-3. **One-turn stages.** Copy `commands/v.md` and `commands/u.md` → `~/.claude/commands/`.
+3. **One-turn stages.** Copy `commands/v.md` and `commands/u.md` to `~/.claude/commands/`.
 
-4. **Writing pass.** Copy `skills/human-prose/` → `~/.claude/skills/human-prose/`.
+4. **Writing pass.** Copy `skills/human-prose/` to `~/.claude/skills/human-prose/`.
 
 5. **Meter**
-   - Copy `hooks/reply_shape.py` and `hooks/code_rules.py` → `~/.claude/hooks/`.
+   - Copy `hooks/reply_shape.py` and `hooks/code_rules.py` to `~/.claude/hooks/`.
      `code_rules.py` adds `~/.claude/rules/code.md` to the context on a
      session's first file edit.
    - Resolve an **absolute** path to Python 3.8 or newer. On Windows, don't use
@@ -51,10 +51,10 @@ and asking.
      gives a real path.
    - Run the tests with that interpreter from this folder:
      `<PYTHON> tests/test_reply_shape.py`, `<PYTHON> tests/test_diff_shape.py`,
-     and `<PYTHON> tests/test_version_sync.py`. All must pass before continuing.
+     `<PYTHON> tests/test_code_rules.py` and `<PYTHON> tests/test_version_sync.py`. All must pass before continuing.
 
 5b. **Diff meter**
-   - Copy `hooks/diff_shape.py` → `~/.claude/hooks/diff_shape.py`.
+   - Copy `hooks/diff_shape.py` to `~/.claude/hooks/diff_shape.py`.
    - It is a git hook, not a Claude Code hook, so it is installed per
      repository: in each repo the user names, run
      `<PYTHON> ~/.claude/hooks/diff_shape.py install --repo <REPO>`. It writes
@@ -84,7 +84,7 @@ and asking.
 
 9. **Verify**
    - Pipe a sample Stop payload into the hook the way Claude Code will:
-     `{"session_id":"install-check","last_assistant_message":"ok"}` → stdin of
+     `{"session_id":"install-check","last_assistant_message":"ok"}` into the stdin of
      `<PYTHON> ~/.claude/hooks/reply_shape.py stop`. Then
      `<PYTHON> ~/.claude/hooks/reply_shape.py report --days 1` must show `n` ≥ 1.
    - Tell the user to start a new session, confirm the output style shows as
@@ -100,7 +100,26 @@ and asking.
     `settings.json` diff, and anything skipped and why.
 
 ## Uninstall
-Remove the two hook entries and `outputStyle` from `settings.json`. Delete the
+Remove the three hook entries (`Stop`, `UserPromptSubmit`, `PostToolUse`) and
+`outputStyle` from `settings.json`. Delete the
 copied files, `~/.claude/reply_shape/`, and `~/.claude/diff_shape/`. In each
 repo, delete the `.git/hooks/pre-commit` and `commit-msg` files that mention
 `diff-shape`. Remove the snippet from `~/.claude/CLAUDE.md`.
+
+## Moving to the plugin
+Remove the manual install before enabling the plugin, or every reply is
+metered twice and the rules load twice.
+1. In `~/.claude/settings.json`, delete the `Stop`, `UserPromptSubmit` and
+   `PostToolUse` entries that run `reply_shape.py` and `code_rules.py`, and
+   `"outputStyle": "Concise"`.
+2. Delete `~/.claude/output-styles/concise.md`, `~/.claude/rules/code.md`,
+   `~/.claude/commands/v.md`, `~/.claude/commands/u.md`,
+   `~/.claude/skills/human-prose/`, `~/.claude/hooks/reply_shape.py` and
+   `~/.claude/hooks/code_rules.py`.
+3. Delete the `## Replies` block from `~/.claude/CLAUDE.md`.
+4. Keep `~/.claude/hooks/diff_shape.py` until you've rerun
+   `/conciseclaude:diff-hooks` in each repo that has the git hooks; the old
+   shims call that file.
+
+The reply log in `~/.claude/reply_shape/` stays where it is, so `report`
+history carries over.
