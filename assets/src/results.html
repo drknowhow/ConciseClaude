@@ -26,25 +26,25 @@ h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
 </style></head>
 <body><div class="wrap">
   <div class="top">
-    <div><h2>Measured, not promised</h2><p class="sub">160 turns on Opus 5.5 and Sonnet 5.5, default vs ConciseClaude 6.1, depth question excluded. 80 single-turn replies graded blind against key-point checklists.</p></div>
+    <div><h2>Measured, not promised</h2><p class="sub">Opus 5.5 and Sonnet 5.5, default vs ConciseClaude 6.2, every case run twice, depth question excluded. Single-turn replies graded blind against key-point checklists.</p></div>
     <div class="legend"><span><i class="sw" style="background:var(--s)"></i>Sonnet</span><span><i class="sw" style="background:var(--o)"></i>Opus</span></div>
   </div>
   <div class="grid">
     <div class="card">
       <h3>Reduction vs default</h3>
-      <div class="row"><div class="lab">Reply length</div><div class="bars"><div class="bar" style="width:65%;background:var(--s)"><span>−65%</span></div><div class="bar" style="width:63%;background:var(--o)"><span>−63%</span></div></div></div>
-      <div class="row"><div class="lab">Output tokens</div><div class="bars"><div class="bar" style="width:25%;background:var(--s)"><span>−25%</span></div><div class="bar" style="width:47%;background:var(--o)"><span>−47%</span></div></div></div>
-      <div class="row"><div class="lab">Wait time</div><div class="bars"><div class="bar" style="width:16%;background:var(--s)"><span>−16%</span></div><div class="bar" style="width:38%;background:var(--o)"><span>−38%</span></div></div></div>
-      <div class="row"><div class="lab">Cost</div><div class="bars"><div class="bar" style="width:1%;background:var(--s)"><span>+9%</span></div><div class="bar" style="width:8%;background:var(--o)"><span>−8%</span></div></div></div>
+      <div class="row"><div class="lab">Reply length</div><div class="bars"><div class="bar" style="width:61%;background:var(--s)"><span>−61%</span></div><div class="bar" style="width:64%;background:var(--o)"><span>−64%</span></div></div></div>
+      <div class="row"><div class="lab">Output tokens</div><div class="bars"><div class="bar" style="width:36%;background:var(--s)"><span>−36%</span></div><div class="bar" style="width:48%;background:var(--o)"><span>−48%</span></div></div></div>
+      <div class="row"><div class="lab">Wait time</div><div class="bars"><div class="bar" style="width:22%;background:var(--s)"><span>−22%</span></div><div class="bar" style="width:34%;background:var(--o)"><span>−34%</span></div></div></div>
+      <div class="row"><div class="lab">Cost</div><div class="bars"><div class="bar" style="width:13%;background:var(--s)"><span>−13%</span></div><div class="bar" style="width:23%;background:var(--o)"><span>−23%</span></div></div></div>
     </div>
     <div class="card">
       <h3>What it keeps</h3>
       <div class="cov">
         <span class="h">Key points covered</span><span class="h">Default</span><span class="h">Concise</span>
-        <span>Sonnet</span><b>97%</b><b>79%</b>
-        <span>Opus</span><b>97%</b><b>85%</b>
+        <span>Sonnet</span><b>95%</b><b>83%</b>
+        <span>Opus</span><b>98%</b><b>87%</b>
       </div>
-      <p class="note">Asked for depth, it gives depth: 5,889 output tokens on Sonnet vs 3,890 default. No reply was judged too terse. Cost falls in conversation and rises in coding and single cold calls.</p>
+      <p class="note">Asked for depth, it gives depth. No reply was judged too terse. Cost falls most in conversation, is level in coding, and rises only for a single cold question.</p>
     </div>
   </div>
 </div></body></html>

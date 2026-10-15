@@ -29,15 +29,14 @@ you get it, and errors, risks and safety steps are never trimmed. Code comes
 without commentary, and a meter measures every reply so the rules don't
 drift.
 
-In the 6.1 benchmark ([write-up](docs/bench-2026-10-15-v6.md)), replies were
-about 64% shorter on Opus 5.5 and Sonnet 5.5, output tokens fell 47% and
-25%, and replies arrived 38% and 16% sooner. Cost fell in conversation (Opus
-31–50%, Sonnet 11–19%) but rose in coding and single cold calls, so overall
-Opus came out 8% cheaper and Sonnet 9% dearer. Blind graders found 82% of
-the key points a full answer covers, against 97% for the default and 78%
-for 5.1, with no reply judged too terse. A Stop hook scores every reply and
-nudges Claude when one runs long; `/conciseclaude:meter report` shows how
-it's doing.
+In the 6.2 benchmark ([write-up](docs/bench-2026-10-15-v6.md)), replies on
+Opus 5.5 and Sonnet 5.5 were about 62% shorter, output tokens fell 48% and
+36%, and replies arrived 34% and 22% sooner. Cost fell 23% on Opus and 13%
+on Sonnet: most in conversation, level in coding, slightly up only for a
+single cold question. Blind graders found 85% of the key points a full
+answer covers, against 96% for the default, with no reply judged too terse.
+A Stop hook scores every reply and nudges Claude when one runs long;
+`/conciseclaude:meter report` shows how it's doing.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.png">
@@ -79,8 +78,8 @@ reply is metered twice and the rules load twice.
 2. Delete `~/.claude/output-styles/concise.md`, `~/.claude/commands/v.md`,
    `~/.claude/commands/u.md`, `~/.claude/skills/human-prose/` and
    `~/.claude/hooks/reply_shape.py`.
-3. Delete the `## Replies` block from `~/.claude/CLAUDE.md`. The plugin prints
-   that pointer at session start.
+3. Delete the `## Replies` block from `~/.claude/CLAUDE.md`. The plugin's
+   forced style carries the rules.
 4. Keep `~/.claude/hooks/diff_shape.py` until you've rerun
    `/conciseclaude:diff-hooks` in each repo that has the git hooks. The old
    shims call that file.
@@ -93,7 +92,7 @@ history carries over.
 |---|---|---|
 | Rules | `output-styles/concise.md` | The only copy of the reply rules: budget, reply grammar, plain-writing rules, cut list, never-cut list. Loads into the system prompt. |
 | Code rules | `rules/code.md`, `hooks/code_rules.py` | Rules for comments, tests, commits, PR descriptions, tickets and docs. A PostToolUse hook adds them on a session's first file edit (`Edit`, `Write` or C3's `c3_edit`), so chat-only sessions don't pay for them. |
-| Pointer | `hooks/session_start.sh` | Prints the rules pointer at session start, so subagents and other surfaces find the rules and nobody writes a second set. `claude-md-snippet.md` is the same text for manual installs. |
+| Session hook | `hooks/session_start.sh` | Keeps the diff meter's copy current at session start. `claude-md-snippet.md` points manual installs at the rules from CLAUDE.md. |
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply and counts writing tells (decorative metaphor, contrast framing, emoji and others; logged, never nudged). Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
 | Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, comment blocks of six or more lines, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
@@ -185,9 +184,10 @@ Each point comes from running an earlier version of this system.
   exceptions, forensic comments, dividers) and only warns on ratios.
 
 ## Evidence
-**6.1 benchmark, 2026-10-15** ([full write-up](docs/bench-2026-10-15-v6.md)).
-Default against 6.1 on Opus 5.5 and Sonnet 5.5, 160 turns, with a 5.1
-control arm and blind grading. The numbers are in the intro above.
+**6.1 and 6.2 benchmarks, 2026-10-15** ([full write-up](docs/bench-2026-10-15-v6.md)).
+Default against 6.2 on Opus 5.5 and Sonnet 5.5, every case run twice, with
+blind grading; the 6.1 run before it had a 5.1 control arm. The 6.2 numbers
+are in the intro above.
 
 **Controlled A/B, 2026-10-03** ([full write-up](docs/token-ab-2026-10-03.md)).
 Headless Claude Code on Sonnet, with the style plus hooks on versus the
@@ -250,7 +250,7 @@ sends no telemetry.
 
 - **Runs:** the hooks in `hooks/hooks.json`, each through `hooks/run.sh`,
   which starts the first Python 3.8+ it finds. At session start,
-  `session_start.sh` prints the rules pointer. When you send a prompt and when
+  `session_start.sh` refreshes the diff meter's copy. When you send a prompt and when
   a reply finishes, `reply_shape.py` measures the reply. After the first file
   edit in a session, `code_rules.py` adds the code rules. In Haiku sessions
   these hooks return without doing anything.
