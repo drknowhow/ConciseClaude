@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-__version__ = "6.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 MODES = ("off", "warn", "block")
 DEFAULT_MODE = "warn"
@@ -32,6 +32,7 @@ LIMITS = {
     "comment_share_warn": 0.15,
     "comment_share_fail": 0.25,
     "min_added_for_share": 40,
+    "comment_block_lines": 6,
     "docstring_lines": 3,
     "module_docstring_lines": 10,
     "commit_lines": 800,
@@ -48,6 +49,7 @@ _SKIP = re.compile(r"(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\
 _PUNCT = "-=─═*~_#/"
 _DIVIDER_RE = re.compile(rf"^(?:[{_PUNCT}]{{6,}}|[{_PUNCT}]{{2,}}\s*[^{_PUNCT}]{{1,60}}?\s*[{_PUNCT}]{{2,}})\s*$")
 _FORENSIC_RE = re.compile(r"\b20\d\d-\d\d-\d\d\b|(?<![\w/])#\d{2,}\b|\bPRs?\s*#?\d{2,}\b|\b(?:before|since|as of)\s+v?\d+\.\d+")
+_TODO_RE = re.compile(r"^(?:TODO|FIXME)\b")
 _SHOUT_RE = re.compile(r"\b[A-Z]{3,}(?:\s+[A-Z]{3,})+\b")
 _EMPTY_CATCH_RE = re.compile(r"\bcatch\b\s*(?:\([^)]*\))?\s*\{\s*\}")
 _HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
@@ -172,6 +174,7 @@ def analyze_diff(text: str, blob_for: Callable[[str], Optional[str]] = lambda p:
             for m in _EMPTY_CATCH_RE.finditer(joined):
                 at = lines[joined[:m.start()].count("\n")][0]
                 findings.append(_finding("fail", "swallowed-except", path, at, "empty catch block"))
+        run_start, run_len, prev = 0, 0, -1
         for n, line in lines:
             if not line.strip():
                 continue
@@ -179,15 +182,24 @@ def analyze_diff(text: str, blob_for: Callable[[str], Optional[str]] = lambda p:
             comment = _is_comment(line, ext)
             if comment or n in doc_lines:
                 comment_lines += 1
+            if comment and n == prev + 1 and run_len:
+                run_len += 1
+            else:
+                if run_len >= LIMITS["comment_block_lines"]:
+                    findings.append(_finding("warn", "long-comment", path, run_start, f"{run_len}-line comment block"))
+                run_start, run_len = (n, 1) if comment else (0, 0)
+            prev = n
             if not comment:
                 continue
             body = _comment_body(line)
             if _DIVIDER_RE.match(body):
                 findings.append(_finding("fail", "divider", path, n, line.strip()))
-            elif _FORENSIC_RE.search(body):
+            elif _FORENSIC_RE.search(body) and not _TODO_RE.match(body):
                 findings.append(_finding("fail", "forensic-comment", path, n, line.strip()))
             elif _SHOUT_RE.search(body):
                 findings.append(_finding("warn", "shouting", path, n, line.strip()))
+        if run_len >= LIMITS["comment_block_lines"]:
+            findings.append(_finding("warn", "long-comment", path, run_start, f"{run_len}-line comment block"))
     share = comment_lines / added_nonblank if added_nonblank else 0.0
     if added_nonblank >= LIMITS["min_added_for_share"]:
         if share > LIMITS["comment_share_fail"]:

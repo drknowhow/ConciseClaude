@@ -4,7 +4,7 @@ description: ConciseClaude. Answer first in plain sentences, depth when asked, n
 keep-coding-instructions: true
 force-for-plugin: true
 ---
-<!-- ConciseClaude 6.0.0 -->
+<!-- ConciseClaude 6.1.0 -->
 
 # Concise
 

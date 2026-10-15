@@ -90,10 +90,10 @@ history carries over.
 | Part | File | Job |
 |---|---|---|
 | Rules | `output-styles/concise.md` | The only copy of the reply rules: budget, reply grammar, plain-writing rules, cut list, never-cut list. Loads into the system prompt. |
-| Code rules | `rules/code.md`, `hooks/code_rules.py` | Code, test and commit rules. A PostToolUse hook adds them on a session's first file edit, so chat-only sessions don't pay for them. |
+| Code rules | `rules/code.md`, `hooks/code_rules.py` | Rules for comments, tests, commits, PR descriptions, tickets and docs. A PostToolUse hook adds them on a session's first file edit (`Edit`, `Write` or C3's `c3_edit`), so chat-only sessions don't pay for them. |
 | Pointer | `hooks/session_start.sh` | Prints the rules pointer at session start, so subagents and other surfaces find the rules and nobody writes a second set. `claude-md-snippet.md` is the same text for manual installs. |
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply and counts writing tells (decorative metaphor, contrast framing, emoji and others; logged, never nudged). Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
-| Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
+| Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, comment blocks of six or more lines, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
 | Plugin | `.claude-plugin/`, `hooks/hooks.json` | Manifest, one-plugin marketplace, and hook wiring. |
 | Visuals | `assets/`, `docs/index.html`, `docs/benchmark/` | Icon and README images (HTML sources in `assets/src/`), and the GitHub Pages site with the interactive benchmark. |
@@ -136,12 +136,16 @@ words, use the literal word, say what was checked and what wasn't. The
 email. The meter counts the patterns in every reply and `report` shows the
 rates, so the next release can show whether they fell.
 
-## What code looks like
-The same rule set covers the code Claude writes: a reviewer has about ten
-minutes per commit. A comment states the invariant the next lines cannot
-show; dates, PR numbers and probe results go in the commit body, which gets
-eight lines. Docstrings are contracts, not histories. Guards sit at real
-boundaries and never swallow. Nothing ships with zero non-test callers.
+## What code and repo text look like
+The same rule set covers what Claude writes for other people to maintain
+and review. Comments default to none; one that exists states, in a line or
+two, what the code can't show. Dates, incidents and measurements go in the
+commit body, which gets eight lines. Docstrings are contracts, not
+histories. Test names say the behaviour. A PR description is two to five
+sentences: the problem, the cause, the new behaviour, the rollout risk and
+what ran. A ticket gives steps to reproduce or acceptance criteria. Guards
+sit at real boundaries and never swallow, and nothing ships with zero
+non-test callers.
 
 ```
 python ~/.claude/hooks/diff_shape.py scan             # what the meter says about the current tree, before installing\npython ~/.claude/hooks/diff_shape.py install          # in each repo: writes .git/hooks/pre-commit and commit-msg
