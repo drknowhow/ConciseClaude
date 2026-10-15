@@ -29,13 +29,15 @@ you get it, and errors, risks and safety steps are never trimmed. Code comes
 without commentary, and a meter measures every reply so the rules don't
 drift.
 
-In the 5.x benchmark, Opus replies were 71% shorter, cost 30% less and
-arrived 42% sooner; Sonnet replies were 67% shorter, 6% cheaper and 15%
-sooner. A blind grader found 93–94% of the key points a full answer covers,
-against 98–99% for the default. Those figures predate 6.0, which allows 600
-characters per reply instead of 400, and haven't been re-run yet. A Stop hook
-scores every reply and nudges Claude when one runs long;
-`/conciseclaude:meter report` shows how it's doing.
+In the 6.1 benchmark ([write-up](docs/bench-2026-10-15-v6.md)), replies were
+about 64% shorter on Opus 5.5 and Sonnet 5.5, output tokens fell 47% and
+25%, and replies arrived 38% and 16% sooner. Cost fell in conversation (Opus
+31–50%, Sonnet 11–19%) but rose in coding and single cold calls, so overall
+Opus came out 8% cheaper and Sonnet 9% dearer. Blind graders found 82% of
+the key points a full answer covers, against 97% for the default and 78%
+for 5.1, with no reply judged too terse. A Stop hook scores every reply and
+nudges Claude when one runs long; `/conciseclaude:meter report` shows how
+it's doing.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.png">
@@ -183,6 +185,10 @@ Each point comes from running an earlier version of this system.
   exceptions, forensic comments, dividers) and only warns on ratios.
 
 ## Evidence
+**6.1 benchmark, 2026-10-15** ([full write-up](docs/bench-2026-10-15-v6.md)).
+Default against 6.1 on Opus 5.5 and Sonnet 5.5, 160 turns, with a 5.1
+control arm and blind grading. The numbers are in the intro above.
+
 **Controlled A/B, 2026-10-03** ([full write-up](docs/token-ab-2026-10-03.md)).
 Headless Claude Code on Sonnet, with the style plus hooks on versus the
 default style, in six-turn conversations run three times each:
