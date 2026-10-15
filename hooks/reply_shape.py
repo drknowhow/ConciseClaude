@@ -6,7 +6,7 @@
   reply_shape.py report [--days N] [--json] | mode [off|nudge|block] | measure [--profile P] | version
 
 Stdlib only, Python 3.8+. Hook failures exit 0, so a hook never costs a turn.
-State: ~/.claude/reply_shape/ (REPLY_SHAPE_DIR); the log stores sizes and a hash per reply, never text.
+State: ~/.claude/reply_shape/ (REPLY_SHAPE_DIR); the log stores sizes, tell counts and a hash per reply, never text.
 """
 from __future__ import annotations
 
@@ -21,11 +21,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "5.1.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.0.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
-    "default": 400,
+    "default": 600,
     "protected": 900,
     "ultra": 150,
     "verbose": None,
@@ -60,7 +60,8 @@ _TAG_RE = re.compile(
 _MARKUP_RE = re.compile(r"[*_~]+|^[ \t]*(?:>[ \t]*)+|^[ \t]{0,3}#{1,6}(?=\s)", re.M)
 _HEADER_RE = re.compile(r"^\s{0,3}#{1,6}\s", re.M)
 
-VERDICT_GLYPHS = ("✅", "⚠️", "⚠", "❌", "⏳")
+# The 6.0 tags, plus the older glyph line that other rule sets still ask for.
+VERDICT_RE = re.compile(r"^(?:\*\*(?:DONE|CAVEAT|BLOCKED|WORKING)\*\*|[✅⚠❌⏳])")
 NEED_YOU_RE = re.compile(r"\*\*Need you:\*\*", re.I)
 RISK_RE = re.compile(r"\*\*Risk:\*\*", re.I)
 # A label is bold: "**Plan:**", "**Risk: headline.**", "⚠️ **Risk:**", on any line.
@@ -78,6 +79,39 @@ _STAGE_RES = {
 # Only the explicit stages count: "explain this" or "shorter" refer to the code
 # at least as often as to the reply.
 _FOLLOWUP_SIGNALS = {"verbose": "more", "ultra": "shorter"}
+# Writing tells from docs/claude-slop-research-2026-10-15.md, counted on prose with code and
+# URLs removed. Logged and reported only; nothing nudges on them until a category proves precise.
+TELLS: Dict[str, "re.Pattern[str]"] = {
+    "metaphor": re.compile(
+        r"\bload[- ]bearing\b|\bseams?\b|\bearns? (?:its|their) (?:keep|place)\b|"
+        r"\bdoing (?:a lot of|real|the heavy) (?:work|lifting)\b|\bsmoking gun\b|\bthe unlock\b", re.I),
+    "contrast": re.compile(
+        r"\b(?:it|this|that)(?:'s| is| was)(?:n't| not) (?:just |only |merely |simply |about )?[^.;\n]{1,60}"
+        r"[.;,—]\s*(?:it|this|that|they)(?:'s| is| was| are)\b|\brather than (?:merely|simply|just)\b|"
+        r"\bnot (?:just|only|merely) [^.;\n]{1,40}, but\b", re.I),
+    "salience": re.compile(
+        r"\b(?:this|that|which) (?:really )?matters\b|\bworth (?:noting|naming|flagging|calling out|stating)\b|"
+        r"\bthe real (?:problem|issue|story|question|win|answer|work)\b|"
+        r"\bhere'?s the (?:thing|kicker|catch|twist|part)\b|\bthat'?s the (?:tell|whole (?:thing|point))\b", re.I),
+    "sincerity": re.compile(r"\b(?:honestly|genuinely|truly|frankly)\b|\bthe honest (?:answer|take|version)\b", re.I),
+    "overclaim": re.compile(
+        r"\bproduction[- ]ready\b|\bfully (?:verified|tested|working|functional)\b|\b100% (?:verified|working)\b|"
+        r"\bno regressions\b", re.I),
+    "sycophancy": re.compile(
+        r"\byou'?re (?:absolutely|completely|totally) (?:right|correct)\b|\b(?:great|excellent) (?:question|catch)\b", re.I),
+    "offer": re.compile(r"\b(?:want me to|shall i|would you like me to|say the word)\b", re.I),
+    "arrow": re.compile(r"→|⇒|(?<=\s)->(?=\s)"),
+    "emoji": re.compile(r"[\u2600-\u27bf\u23f3\u25b8\u2b50\U0001f300-\U0001faff]"),
+    "em_dash": re.compile("—"),
+    "bold": re.compile(r"\*\*[^*\n]+\*\*"),
+}
+# The status tags and labels the rules ask for are removed before counting tells.
+_SANCTIONED_BOLD_RE = re.compile(
+    r"\*\*(?:DONE|CAVEAT|BLOCKED|WORKING|(?:Risk|Plan|Review|Error|Security|Migration|Destructive|Audit|Debug|"
+    r"Need you):[^*\n]*)\*\*",
+    re.I,
+)
+
 # A plain ask for depth lifts the budget for that reply but is not a follow-up
 # signal, so it never counts as "asked for more" in the report.
 _DEPTH_RE = re.compile(
@@ -115,6 +149,8 @@ def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
     text = text or ""
     prose_raw, literal = strip_literals(text)
     prose = " ".join(_MARKUP_RE.sub("", _TAG_RE.sub("", prose_raw)).split())
+    scan = _SANCTIONED_BOLD_RE.sub(" ", prose_raw)
+    tells = {name: n for name, rx in TELLS.items() if (n := len(rx.findall(scan)))}
     prof = (profile or ("protected" if PROTECTED_LABEL_RE.search(text) else "default")).lower()
     if prof not in BUDGETS:
         prof = "default"
@@ -130,9 +166,10 @@ def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
         "lines": len(lines),
         "has_table": bool(_TABLE_LINE_RE.search(text)),
         "has_header": bool(_HEADER_RE.search(text)),
-        "verdict_first": first.startswith(VERDICT_GLYPHS),
+        "verdict_first": bool(VERDICT_RE.match(first)),
         "need_you_last": bool(NEED_YOU_RE.search(last)),
         "has_risk": bool(RISK_RE.search(text)),
+        "tells": tells,
         "profile": prof,
         "budget": budget,
         "over_by": over,
@@ -143,18 +180,20 @@ def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
 def feedback(row: Dict[str, Any], kind: str) -> str:
     p, b, prof, o = row.get("prose_chars"), row.get("budget"), row.get("profile"), row.get("over_by")
     if kind == "nudge":
-        lead = f"[reply-shape] Previous reply: {p} prose chars vs budget {b} ({prof}), over by {o}. Make this reply shorter."
+        lead = (f"[reply-shape] Previous reply: {p} prose chars vs budget {b} ({prof}), over by {o}. "
+                "Make this reply shorter by cutting points; keep each sentence whole.")
     else:
         lead = f"reply-shape: {p} prose chars > {b} ({prof}), over by {o}. Rewrite the reply once, shorter. Don't mention this check."
     if prof == "protected":
         hint = (" Labeled replies still cap at 900: keep the decision, the risk and the literals in the reply; "
                 "put background in a file, or offer /v.")
     else:
-        hint = (" Cut narration; code, paths, commands and error text stay verbatim. Security, destructive, error, "
+        hint = (" Cut narration, not articles or verbs; code, paths, commands and error text stay verbatim. "
+                "Security, destructive, error, "
                 "migration, planning and review replies get 900 only under a true **Risk:** / **Plan:** / "
                 "**Error:** / **Review:** label.")
     if not row.get("verdict_first"):
-        hint += " It also lacked a result line: start with a status glyph and a bold verdict."
+        hint += " It also lacked a result line: start with a bold status tag such as **DONE**, then the verdict."
     return lead + hint
 
 
@@ -368,6 +407,18 @@ def _summary(rows: List[Dict[str, Any]], followups: Dict[str, set]) -> Dict[str,
     }
 
 
+def _tell_rates(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+    """Per category: occurrences per 100 replies and the share of replies with any. Older rows have no tells."""
+    scored = [r.get("tells") for r in rows if isinstance(r.get("tells"), dict)]
+    rates = {}
+    for name in TELLS:
+        counts = [int(t.get(name, 0)) for t in scored]
+        if any(counts):
+            rates[name] = {"per_100": round(100 * sum(counts) / len(counts), 1),
+                           "pct": _pct(sum(1 for c in counts if c), len(counts))}
+    return rates
+
+
 def cmd_report(days: float, as_json: bool) -> None:
     cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - days * 86400))
     rows: List[Dict[str, Any]] = []
@@ -395,6 +446,7 @@ def cmd_report(days: float, as_json: bool) -> None:
         "sessions": len({r.get("session_id") for r in rows}),
         "groups": {k: _summary(v, followups) for k, v in groups.items()},
         "label_pct": _pct(len(groups.get("protected", [])), len(rows)),
+        "tells": _tell_rates(rows),
     }
     if as_json:
         print(json.dumps(result, indent=2))
@@ -406,6 +458,9 @@ def cmd_report(days: float, as_json: bool) -> None:
         print(f"{name:<10}{s['n']:>6}{s['median']:>8}{s['p90']:>7}{s['over_pct']:>6}%{s['verdict_first_pct']:>11}%"
               f"{s['asked_more_pct']:>11}%{s['asked_shorter_pct']:>14}%")
     print(f"labeled (protected budget): {result['label_pct']}% of replies. Much above 20% means labels are buying room.")
+    if result["tells"]:
+        print("writing tells (logged only): " + ", ".join(
+            f"{name} {t['per_100']}/100 replies in {t['pct']}%" for name, t in result["tells"].items()))
 
 
 def main(argv: Optional[List[str]] = None) -> int:
