@@ -222,7 +222,9 @@ _TRANSCRIPT_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Ran|Tested|Verified|Passed|Veri
 
 
 def analyze_message(text: str) -> Dict[str, Any]:
-    lines = [l.rstrip() for l in text.splitlines() if not l.startswith("#")]
+    # Git strips '#' lines only from an edited message, which carries this template; -m and -F keep them.
+    edited = "# Please enter the commit message" in text
+    lines = [l.rstrip() for l in text.splitlines() if not (edited and l.startswith("#"))]
     while lines and not lines[-1].strip():
         lines.pop()
     while lines and _TRAILER_RE.match(lines[-1]):
