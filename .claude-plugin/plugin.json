@@ -1,7 +1,7 @@
 {
   "name": "conciseclaude",
   "displayName": "ConciseClaude",
-  "version": "6.1.0",
+  "version": "6.1.1",
   "description": "Claude Code that gets to the point in plain sentences: answer-first replies, depth when you ask for it, safety steps never cut, code without narration, and rules against the writing habits readers flag in Claude's output. A meter keeps it honest.",
   "author": { "name": "drknowhow", "url": "https://github.com/drknowhow" },
   "homepage": "https://drknowhow.github.io/ConciseClaude/",
