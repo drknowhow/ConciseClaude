@@ -10,8 +10,10 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-light.png">
 <link rel="icon" href="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/icon.png">
 <style>
-:root { --bg:#f6f5f2; --card:#fff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#7a7973; --accent:#2a78d6; --code:#efeee9; }
-@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --accent:#5598e7; --code:#262624; } }
+:root { --bg:#f6f5f2; --card:#fff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#7a7973; --accent:#2a78d6; --code:#efeee9;
+  --o:#eb6834; --s:#2a78d6; --h:#1baf7a; --grid:#ecebe6; --base:#b9b7b0; --tip:#0b0b0b; --tipink:#f5f4ef; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --accent:#5598e7; --code:#262624;
+  --o:#d95926; --s:#3987e5; --h:#199e70; --grid:#2a2a27; --base:#5a5954; --tip:#f5f4ef; --tipink:#141413; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
 main { max-width: 980px; margin: 0 auto; padding: 56px 24px 64px; }
@@ -20,20 +22,56 @@ header img { width: 64px; height: 64px; }
 h1 { font-size: 40px; letter-spacing: -0.02em; margin: 0; }
 .tag { font-size: 22px; color: var(--ink2); margin: 10px 0 28px; }
 .hero { width: 100%; border-radius: 14px; border: 1px solid var(--border); display: block; }
-h2 { font-size: 20px; margin: 44px 0 10px; }
+h2 { font-size: 20px; margin: 44px 0 6px; }
+h3 { font-size: 15px; margin: 0 0 2px; }
 pre { background: var(--code); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 14px/1.5 ui-monospace, Consolas, monospace; margin: 0; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-.card b { display: block; margin-bottom: 4px; }
-.card p { margin: 0; color: var(--ink2); font-size: 14.5px; }
-.cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; min-width: 0; }
+.grid .card b { display: block; margin-bottom: 4px; }
+.grid .card p { margin: 0; color: var(--ink2); font-size: 14.5px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 .btn { display: inline-block; padding: 10px 16px; border-radius: 9px; text-decoration: none; font-weight: 600; font-size: 15px; }
 .primary { background: var(--accent); color: #fff; }
 .ghost { border: 1px solid var(--border); color: var(--ink); background: var(--card); }
-p.note { color: var(--muted); font-size: 14px; }
+p.note, .sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+.card .sub { font-size: 13px; margin: 0 0 12px; }
 footer { margin-top: 48px; color: var(--muted); font-size: 13.5px; }
 a { color: var(--accent); }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 32px; } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink2); margin: 0 0 12px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.charts { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; margin-bottom: 14px; }
+.small { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.hrow { display: grid; grid-template-columns: 120px 1fr; align-items: center; margin: 12px 0; }
+.hrow .lab { font-size: 14px; color: var(--ink2); }
+.hbars { display: grid; gap: 3px; position: relative; }
+.hbar { height: 12px; position: relative; }
+.hbar i { position: absolute; top: 0; height: 12px; display: block; }
+.hbar em { position: absolute; top: -3px; font-size: 12.5px; line-height: 1.4; font-weight: 600; font-style: normal; white-space: nowrap; color: var(--ink); }
+.zero { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--base); }
+.db { display: grid; grid-template-columns: 64px 1fr; align-items: center; margin: 14px 0; }
+.db .lab { font-size: 14px; color: var(--ink2); }
+.dbt { position: relative; height: 26px; }
+.dbt .ln { position: absolute; top: 12px; height: 2px; background: var(--base); }
+.dbt .dot { position: absolute; top: 6px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
+.dbt .off { border: 2px solid var(--ink2); background: var(--card); }
+.dbt em { position: absolute; top: 3px; font-style: normal; font-size: 13px; white-space: nowrap; }
+.axis { position: relative; height: 18px; margin-left: 64px; font-size: 11.5px; color: var(--muted); }
+.axis span { position: absolute; transform: translateX(-50%); }
+.key { display: flex; gap: 16px; font-size: 13px; color: var(--ink2); margin-top: 6px; }
+.key i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.svgbox { width: 100%; }
+svg text { font: 12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+[data-tip] { cursor: default; }
+#tip { position: fixed; pointer-events: none; background: var(--tip); color: var(--tipink); font-size: 13px; padding: 6px 9px; border-radius: 7px; white-space: nowrap; opacity: 0; transition: opacity .08s; z-index: 10; }
+details { margin-top: 10px; font-size: 14px; color: var(--ink2); }
+summary { cursor: pointer; color: var(--muted); }
+table { border-collapse: collapse; margin-top: 8px; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 4px 12px 4px 0; text-align: right; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { text-align: left; }
+.tables { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+@media (max-width: 760px) { .grid, .charts { grid-template-columns: 1fr; } h1 { font-size: 32px; } }
+@media (max-width: 600px) { .small { grid-template-columns: 1fr; } .hrow { grid-template-columns: 96px 1fr; } }
 </style>
 </head>
 <body>
@@ -45,13 +83,13 @@ a { color: var(--accent); }
   <p class="tag">Claude Code that gets to the point. Same work, a third of the words.</p>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-dark.png">
-    <img class="hero" src="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-light.png" alt="A default Claude Code reply of 3,018 characters next to the ConciseClaude reply of 500 characters to the same question.">
+    <img class="hero" src="https://raw.githubusercontent.com/drknowhow/ConciseClaude/main/assets/hero-light.png" alt="A default Claude Code reply of 3,018 characters next to the ConciseClaude reply of 680 characters to the same question.">
   </picture>
 
   <h2>Install</h2>
   <pre>claude plugin marketplace add drknowhow/ConciseClaude
 claude plugin install conciseclaude@conciseclaude</pre>
-  <p class="note">Start a new session and it is on, for Opus, Sonnet and Haiku.</p>
+  <p class="note" style="margin-top:10px">Start a new session and it is on, for Opus, Sonnet and Haiku.</p>
 
   <h2>What you get</h2>
   <div class="grid">
@@ -60,8 +98,34 @@ claude plugin install conciseclaude@conciseclaude</pre>
     <div class="card"><b>Measured</b><p>A meter checks every reply and nudges Claude when it runs long. Code arrives without narration.</p></div>
   </div>
 
-  <h2>Benchmarked</h2>
-  <p>Default against ConciseClaude 6.3.1 on Opus 5.5, Sonnet 5.5 and Haiku 5.5, every case run twice, single-turn replies graded blind against key-point checklists. On Opus, replies came out 67% shorter, cost fell 24% and answers arrived 37% sooner, while covering 83% of key points against 97% for the default. Cost fell 4% on Sonnet and 8% on Haiku.</p>
+  <h2>Benchmarked: 6.3.1</h2>
+  <p class="sub">Against default Claude Code on the 5.5 models. Every case run twice; single-turn replies graded blind.</p>
+  <div class="legend" id="legend3"></div>
+  <div class="charts">
+    <div class="card">
+      <h3>Less of everything</h3>
+      <p class="sub">Reduction against default, depth question excluded</p>
+      <div id="reduce"></div>
+    </div>
+    <div class="card">
+      <h3>Key points covered</h3>
+      <p class="sub">No reply was judged too terse</p>
+      <div id="cover"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Where the cost goes</h3>
+    <p class="sub">Cost against default by kind of session. Left of the line is cheaper.</p>
+    <div id="bytype"></div>
+  </div>
+  <details><summary>Show as tables</summary><div class="tables" id="t631"></div></details>
+
+  <h2>Version over version</h2>
+  <p class="sub">Each release against default in the same run. 4.0 and 5.0 used an earlier question set, so compare coverage within each side of the divider.</p>
+  <div class="legend" id="legend2"></div>
+  <div class="small" id="versions"></div>
+  <details><summary>Show as tables</summary><div class="tables" id="tver"></div></details>
+
   <div class="cta">
     <a class="btn primary" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-10-15-v6.md">Read the 6.3.1 benchmark</a>
     <a class="btn ghost" href="benchmark/">5.0 interactive benchmark</a>
@@ -70,5 +134,224 @@ claude plugin install conciseclaude@conciseclaude</pre>
 
   <footer>Apache-2.0 · <a href="benchmark/4.0-findings.html">How 4.0 was tested and fixed</a></footer>
 </main>
+<div id="tip" role="tooltip"></div>
+<script>
+const MODELS = [["opus", "Opus", "var(--o)"], ["sonnet", "Sonnet", "var(--s)"], ["haiku", "Haiku", "var(--h)"]];
+const REDUCE = [
+  ["Reply length", { opus: 67, sonnet: 60, haiku: 46 }],
+  ["Output tokens", { opus: 49, sonnet: 29, haiku: 28 }],
+  ["Wait time", { opus: 37, sonnet: 17, haiku: 17 }],
+  ["Cost", { opus: 24, sonnet: 4, haiku: 8 }],
+];
+const COVER = { opus: [97, 83], sonnet: [94, 84], haiku: [92, 88] };
+const BYTYPE = [
+  ["Ops conversation", { opus: -39, sonnet: -23, haiku: -30 }],
+  ["Design conversation", { opus: -52, sonnet: -11, haiku: -27 }],
+  ["Coding session", { opus: 4, sonnet: 10, haiku: 13 }],
+  ["Single question", { opus: 1, sonnet: 12, haiku: 2 }],
+];
+const VERSIONS = [
+  { title: "Cost", sub: "% against default, lower is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"], split: 2,
+    opus: [-24, -30, -8, -23, -24], sonnet: [-4, -6, 9, -13, -4], min: -40, max: 20, step: 20, unit: "%" },
+  { title: "Output tokens", sub: "% against default, lower is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"], split: 2,
+    opus: [null, -57, -47, -48, -49], sonnet: [null, -37, -25, -36, -29], min: -60, max: 0, step: 20, unit: "%" },
+  { title: "Key points covered", sub: "points behind default, nearer 0 is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"], split: 2,
+    opus: [-6, -6, -12, -11, -14], sonnet: [-11, -4, -18, -12, -10], min: -20, max: 0, step: 5, unit: " pts" },
+  { title: "Writing tells", sub: "bold spans, emoji, arrows and similar per reply, lower is better", x: ["default", "5.1", "6.1", "6.2", "6.3.1"],
+    opus: [9.5, 5.7, 0, 0.1, 0], sonnet: [7.3, 4.3, 0.1, 0.8, 1.1], min: 0, max: 10, step: 5, unit: "" },
+];
+
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, text) {
+  const e = tag.startsWith("svg:") ? document.createElementNS(NS, tag.slice(4)) : document.createElement(tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+const sign = v => (v < 0 ? "−" : v > 0 ? "+" : "") + Math.abs(v);
+const pct = v => sign(v) + "%";
+const val = (v, p) => p.unit === "%" ? pct(v) : (v < 0 ? "−" : "") + Math.abs(v) + p.unit;
+const tick = (v, p) => p.unit === "%" ? pct(v) : (v < 0 ? "−" : "") + Math.abs(v);
+
+function legend(id, models) {
+  const box = document.getElementById(id);
+  for (const [, name, color] of models) {
+    const s = el("span");
+    s.append(el("i", { class: "sw", style: `background:${color}` }), name);
+    box.append(s);
+  }
+}
+
+function drawReduce() {
+  const box = document.getElementById("reduce");
+  for (const [label, vals] of REDUCE) {
+    const row = el("div", { class: "hrow" });
+    const bars = el("div", { class: "hbars" });
+    for (const [key, name, color] of MODELS) {
+      const v = vals[key];
+      const bar = el("div", { class: "hbar", "data-tip": `${name} · ${label}: −${v}% against default` });
+      bar.append(el("i", { style: `left:0;width:${v}%;background:${color};border-radius:0 4px 4px 0` }));
+      bar.append(el("em", { style: `left:calc(${v}% + 6px)` }, `−${v}%`));
+      bars.append(bar);
+    }
+    row.append(el("div", { class: "lab" }, label), bars);
+    box.append(row);
+  }
+}
+
+function drawCover() {
+  const box = document.getElementById("cover");
+  const lo = 75, hi = 100, x = v => (v - lo) / (hi - lo) * 100;
+  for (const [key, name, color] of MODELS) {
+    const [def, cc] = COVER[key];
+    const row = el("div", { class: "db" });
+    const t = el("div", { class: "dbt", "data-tip": `${name}: ${cc}% with ConciseClaude, ${def}% default` });
+    t.append(el("div", { class: "ln", style: `left:${x(cc)}%;width:${x(def) - x(cc)}%` }));
+    t.append(el("div", { class: "dot off", style: `left:${x(def)}%` }));
+    t.append(el("div", { class: "dot", style: `left:${x(cc)}%;background:${color}` }));
+    t.append(el("em", { style: `right:calc(${100 - x(cc)}% + 12px);font-weight:600;color:var(--ink)` }, `${cc}%`));
+    t.append(el("em", { style: `left:calc(${x(def)}% + 12px);color:var(--ink2)` }, `${def}%`));
+    row.append(el("div", { class: "lab" }, name), t);
+    box.append(row);
+  }
+  const axis = el("div", { class: "axis" });
+  for (const v of [80, 90, 100]) axis.append(el("span", { style: `left:${x(v)}%` }, v + "%"));
+  box.append(axis);
+  const k = el("div", { class: "key" });
+  const a = el("span"); a.append(el("i", { style: "background:var(--ink2)" }), "ConciseClaude");
+  const b = el("span"); b.append(el("i", { style: "border:2px solid var(--ink2);width:7px;height:7px" }), "Default");
+  k.append(a, b);
+  box.append(k);
+}
+
+function drawByType() {
+  const box = document.getElementById("bytype");
+  const lo = -70, hi = 30, x = v => (v - lo) / (hi - lo) * 100;
+  for (const [label, vals] of BYTYPE) {
+    const row = el("div", { class: "hrow" });
+    const bars = el("div", { class: "hbars" });
+    bars.append(el("div", { class: "zero", style: `left:${x(0)}%` }));
+    for (const [key, name, color] of MODELS) {
+      const v = vals[key];
+      const bar = el("div", { class: "hbar", "data-tip": `${name} · ${label}: ${pct(v)} cost against default` });
+      const left = Math.min(x(v), x(0)), w = Math.max(Math.abs(x(v) - x(0)), 0.4);
+      bar.append(el("i", { style: `left:${left}%;width:${w}%;background:${color};border-radius:${v < 0 ? "4px 0 0 4px" : "0 4px 4px 0"}` }));
+      bar.append(el("em", { style: v < 0 ? `right:calc(${100 - x(v)}% + 6px)` : `left:calc(${x(v)}% + 6px)` }, pct(v)));
+      bars.append(bar);
+    }
+    row.append(el("div", { class: "lab" }, label), bars);
+    box.append(row);
+  }
+}
+
+function drawPanel(box, p) {
+  const W = box.clientWidth, H = 220, L = 40, R = 30, T = 14, B = 24;
+  const svg = el("svg:svg", { width: W, height: H, role: "img", "aria-label": `${p.title} by version, Opus and Sonnet` });
+  const y = v => T + (p.max - v) / (p.max - p.min) * (H - T - B);
+  for (let v = p.min; v <= p.max; v += p.step) {
+    svg.append(el("svg:line", { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: v === 0 ? "var(--base)" : "var(--grid)" }));
+    svg.append(el("svg:text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", fill: "var(--muted)" }, tick(v, p)));
+  }
+  const slot = (W - L - R) / p.x.length, BAR = Math.min(16, slot / 2 - 4), GAP = 2;
+  if (p.split) {
+    const xs = L + slot * p.split;
+    svg.append(el("svg:line", { x1: xs, x2: xs, y1: T - 8, y2: H - B + 4, stroke: "var(--border)", "stroke-width": 2 }));
+  }
+  p.x.forEach((label, i) => {
+    const cx = L + slot * (i + 0.5);
+    svg.append(el("svg:text", { x: cx, y: H - 6, "text-anchor": "middle", fill: "var(--ink2)" }, label));
+    if (p.opus[i] === null) {
+      svg.append(el("svg:text", { x: cx, y: y(0) + 16, "text-anchor": "middle", fill: "var(--muted)" }, "n/a"));
+      return;
+    }
+    [["opus", "Opus", "var(--o)", -1], ["sonnet", "Sonnet", "var(--s)", 1]].forEach(([key, name, color, side]) => {
+      const v = p[key][i];
+      const bx = side < 0 ? cx - GAP / 2 - BAR : cx + GAP / 2;
+      const top = Math.min(y(v), y(0)), h = Math.max(Math.abs(y(v) - y(0)), 1.5);
+      const r = Math.min(4, h / 2), down = v < 0, x2 = bx + BAR, y0 = down ? top : top + h, y1 = down ? top + h : top;
+      const d = down
+        ? `M${bx},${y0} H${x2} V${y1 - r} Q${x2},${y1} ${x2 - r},${y1} H${bx + r} Q${bx},${y1} ${bx},${y1 - r} Z`
+        : `M${bx},${y0} V${y1 + r} Q${bx},${y1} ${bx + r},${y1} H${x2 - r} Q${x2},${y1} ${x2},${y1 + r} V${y0} Z`;
+      svg.append(el("svg:path", { d, fill: color }));
+      const what = label === "default" ? "default Claude Code" : label;
+      svg.append(el("svg:rect", { x: side < 0 ? cx - slot / 2 : cx, y: T, width: slot / 2, height: H - T - B, fill: "transparent",
+        "data-tip": `${name} · ${what} · ${p.title}: ${val(v, p)}` }));
+      if (i === p.x.length - 1) {
+        const ty = down ? y(v) + 14 : y(v) - 5;
+        svg.append(el("svg:text", { x: side < 0 ? bx + BAR : bx, y: ty, "text-anchor": side < 0 ? "end" : "start",
+          fill: "var(--ink)", "font-weight": 600 }, tick(v, p)));
+      }
+    });
+  });
+  box.replaceChildren(svg);
+}
+
+function drawVersions() {
+  const grid = document.getElementById("versions");
+  const boxes = VERSIONS.map(p => {
+    const card = el("div", { class: "card" });
+    card.append(el("h3", {}, p.title), el("p", { class: "sub" }, p.sub));
+    const box = el("div", { class: "svgbox" });
+    card.append(box);
+    grid.append(card);
+    return box;
+  });
+  const render = () => VERSIONS.forEach((p, i) => drawPanel(boxes[i], p));
+  render();
+  let last = grid.clientWidth;
+  new ResizeObserver(() => { if (grid.clientWidth !== last) { last = grid.clientWidth; render(); } }).observe(grid);
+}
+
+function table(caption, head, rows) {
+  const t = el("table");
+  t.append(el("caption", { style: "text-align:left;color:var(--ink);font-weight:600" }, caption));
+  const tr = el("tr");
+  head.forEach(h => tr.append(el("th", {}, h)));
+  t.append(tr);
+  for (const r of rows) {
+    const row = el("tr");
+    r.forEach(c => row.append(el("td", {}, c)));
+    t.append(row);
+  }
+  return t;
+}
+
+function drawTables() {
+  const names = MODELS.map(m => m[1]);
+  const t = document.getElementById("t631");
+  t.append(table("Reduction against default", ["", ...names], REDUCE.map(([l, v]) => [l, ...MODELS.map(([k]) => `−${v[k]}%`)])));
+  t.append(table("Key points covered", ["", "Default", "ConciseClaude"], MODELS.map(([k, n]) => [n, COVER[k][0] + "%", COVER[k][1] + "%"])));
+  t.append(table("Cost by session", ["", ...names], BYTYPE.map(([l, v]) => [l, ...MODELS.map(([k]) => pct(v[k]))])));
+  const tv = document.getElementById("tver");
+  for (const p of VERSIONS)
+    tv.append(table(p.title, ["", "Opus", "Sonnet"], p.x.map((x, i) => [x,
+      p.opus[i] === null ? "n/a" : val(p.opus[i], p), p.sonnet[i] === null ? "n/a" : val(p.sonnet[i], p)])));
+}
+
+function tooltips() {
+  const tip = document.getElementById("tip");
+  const hide = () => { tip.style.opacity = 0; };
+  document.addEventListener("pointermove", e => {
+    const t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) return hide();
+    tip.textContent = t.getAttribute("data-tip");
+    const w = tip.offsetWidth;
+    tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, e.clientX + 12)) + "px";
+    tip.style.top = (e.clientY + 16) + "px";
+    tip.style.opacity = 1;
+  });
+  document.addEventListener("pointerleave", hide);
+  addEventListener("scroll", hide, { passive: true });
+}
+
+legend("legend3", MODELS);
+legend("legend2", MODELS.slice(0, 2));
+drawReduce();
+drawCover();
+drawByType();
+drawVersions();
+drawTables();
+tooltips();
+</script>
 </body>
 </html>
