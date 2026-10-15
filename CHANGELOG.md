@@ -14,7 +14,7 @@ this file disagree with it.
 Cost. The 6.1 benchmark found the plugin cheaper in conversation but dearer
 in coding and single cold calls, because its rule text adds input tokens to
 every session.
-- The style is about 3,600 characters instead of 7,558 and the code rules
+- The style is about 3,500 characters instead of 7,558 and the code rules
   3,359 instead of 6,425, with the same rules. The session-start pointer is
   gone: subagents never received it, and the forced style now carries its
   human-prose reminder. A cold call adds about 1,225 input tokens, down from
