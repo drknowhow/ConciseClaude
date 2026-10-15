@@ -108,6 +108,12 @@ def test_commit_message_shape():
     assert codes(r) == ["headed-section", "long-body", "long-subject", "transcript"] and not r["ok"]
 
 
+def test_markdown_heading_counts_unless_git_will_strip_it():
+    assert codes(ds.analyze_message("Fix parser\n\n## Summary\nRejects empty names.\n")) == ["headed-section"]
+    edited = "Fix parser\n\nRejects empty names.\n# Please enter the commit message for your changes.\n# On branch x\n"
+    assert ds.analyze_message(edited)["findings"] == []
+
+
 def _git(*a, cwd):
     return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True).stdout
 
