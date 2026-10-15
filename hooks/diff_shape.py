@@ -218,7 +218,9 @@ def analyze_diff(text: str, blob_for: Callable[[str], Optional[str]] = lambda p:
 
 _TRAILER_RE = re.compile(r"^[A-Za-z][A-Za-z-]+: \S")
 _HEADING_RE = re.compile(r"^(?:#{1,6}\s|\*\*[^*]+\*\*:?\s*$|[A-Z][A-Z' ,/-]{3,}[.:]\s*$)")
-_TRANSCRIPT_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Ran|Tested|Verified|Passed|Verification)\b|^\s*(?:\$ |pytest\b|npm (?:test|run)\b)")
+# One line saying what verification ran is wanted; a second such line, or pasted command output, is a transcript.
+_VERIFY_RE = re.compile(r"^\s*(?:[-*]\s*)?(?:Ran|Tested|Verified|Passed|Verification)\b")
+_COMMAND_RE = re.compile(r"^\s*(?:\$ |pytest\b|npm (?:test|run)\b)")
 
 
 def analyze_message(text: str) -> Dict[str, Any]:
@@ -237,10 +239,11 @@ def analyze_message(text: str) -> Dict[str, Any]:
         findings.append(_finding("warn", "long-subject", "", 1, f"{len(subject)} chars"))
     if len(body) > LIMITS["body_lines"]:
         findings.append(_finding("warn", "long-body", "", None, f"{len(body)} body lines, budget {LIMITS['body_lines']}"))
+    verify_lines = 0
     for i, l in enumerate(body, 2):
         if _HEADING_RE.match(l.strip()):
             findings.append(_finding("fail", "headed-section", "", i, l.strip()))
-        elif _TRANSCRIPT_RE.match(l):
+        elif _COMMAND_RE.match(l) or (_VERIFY_RE.match(l) and (verify_lines := verify_lines + 1) > 1):
             findings.append(_finding("warn", "transcript", "", i, l.strip()))
     return {"subject_chars": len(subject), "body_lines": len(body), "findings": findings,
             "ok": not any(f["level"] == "fail" for f in findings)}

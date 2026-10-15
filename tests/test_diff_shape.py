@@ -103,9 +103,16 @@ def test_commit_message_shape():
     good = "fix(auth): compare token expiry in UTC\n\nNaive local time drifted an hour at DST.\n\nClaude-Session: https://x\nCo-Authored-By: a <a@b>\n"
     r = ds.analyze_message(good)
     assert r["ok"] and r["body_lines"] == 1 and r["findings"] == []
-    bad = "s" * 80 + "\n\nWHAT SHIPS.\n" + "line\n" * 9 + "Ran pytest: 300 passed\n"
+    bad = "s" * 80 + "\n\nWHAT SHIPS.\n" + "line\n" * 9 + "$ pytest -q\n"
     r = ds.analyze_message(bad)
     assert codes(r) == ["headed-section", "long-body", "long-subject", "transcript"] and not r["ok"]
+
+
+def test_one_verification_line_is_not_a_transcript():
+    assert ds.analyze_message("Fix parser\n\nRejects empty names.\nVerified: 42 tests pass.\n")["findings"] == []
+    two = ds.analyze_message("Fix parser\n\nVerified: unit tests pass.\nRan the smoke suite: green.\n")
+    assert codes(two) == ["transcript"] and two["findings"][0]["line"] == 3
+    assert codes(ds.analyze_message("Fix parser\n\n$ pytest -q\n")) == ["transcript"]
 
 
 def test_markdown_heading_counts_unless_git_will_strip_it():
