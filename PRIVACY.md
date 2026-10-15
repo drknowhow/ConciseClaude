@@ -7,8 +7,8 @@ anyone else.
 ## What it reads
 - The text of each finished Claude Code reply, in memory, to count its prose
   characters. The text is not saved.
-- The session transcript file Claude Code already keeps, only to read which
-  model the session uses (so it can skip Haiku) or to find the final reply.
+- The session transcript file Claude Code already keeps, only to find the
+  final reply when Claude Code doesn't pass it to the hook.
 - If you install the diff meter: your staged git diff and commit message, at
   commit time, to measure them. Neither is saved.
 

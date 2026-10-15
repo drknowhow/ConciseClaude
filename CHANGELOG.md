@@ -10,6 +10,14 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.3.0 (2026-10-15)
+- Haiku gets the whole rule set: the style no longer tells Haiku to ignore
+  it, and the meter, the nudge and the code rules run in Haiku sessions. On
+  Haiku 5.5 this breaks even on cost against default (6.2: 10% dearer) and
+  every reply opens with its status tag. Results are in
+  `docs/bench-2026-10-15-v6.md`.
+- The hooks no longer read the session transcript to find the model.
+
 ## 6.2.0 (2026-10-15)
 Cost. The 6.1 benchmark found the plugin cheaper in conversation but dearer
 in coding and single cold calls, because its rule text adds input tokens to
