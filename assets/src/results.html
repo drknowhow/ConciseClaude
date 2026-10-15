@@ -1,15 +1,15 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <style>
-:root { --bg:#f6f5f2; --card:#ffffff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8984; --s:#2a78d6; --o:#eb6834; --grid:#ecebe6; }
-@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --s:#3987e5; --o:#d95926; --grid:#2a2a27; } }
+:root { --bg:#f6f5f2; --card:#ffffff; --border:#e4e2dc; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8984; --s:#2a78d6; --o:#eb6834; --h:#1baf7a; --grid:#ecebe6; }
+@media (prefers-color-scheme: dark) { :root { --bg:#141413; --card:#1d1d1b; --border:#2e2e2b; --ink:#f5f4ef; --ink2:#c3c2b7; --muted:#8f8e86; --s:#3987e5; --o:#d95926; --h:#199e70; --grid:#2a2a27; } }
 * { box-sizing: border-box; margin: 0; }
-html, body { width: 1280px; height: 420px; background: var(--bg); color: var(--ink); font: 16px/1.4 "Segoe UI", system-ui, sans-serif; }
+html, body { width: 1280px; height: 490px; background: var(--bg); color: var(--ink); font: 16px/1.4 "Segoe UI", system-ui, sans-serif; }
 .wrap { padding: 36px 56px; }
-.top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
+.top { display: flex; gap: 40px; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
 h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
 .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
-.legend { display: flex; gap: 18px; font-size: 14px; color: var(--ink2); }
+.legend { display: flex; flex-shrink: 0; white-space: nowrap; gap: 18px; font-size: 14px; color: var(--ink2); }
 .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 .grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 26px; }
@@ -17,34 +17,36 @@ h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
 .row { display: grid; grid-template-columns: 130px 1fr; align-items: center; margin: 10px 0; }
 .row .lab { font-size: 14px; color: var(--ink2); }
 .bars { display: grid; gap: 4px; }
-.bar { height: 18px; border-radius: 0 4px 4px 0; position: relative; }
-.bar span { position: absolute; left: calc(100% + 8px); top: -1px; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.bar { height: 14px; border-radius: 0 4px 4px 0; position: relative; }
+.bar span { position: absolute; left: calc(100% + 8px); top: -3px; font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
 .cov { display: grid; grid-template-columns: 1fr auto auto; gap: 10px 22px; align-items: baseline; font-size: 14px; }
 .cov .h { color: var(--muted); font-size: 12.5px; }
 .cov b { font-size: 22px; font-weight: 700; }
+.bar span em { font-style: normal; font-weight: 400; color: var(--ink2); margin-left: 6px; }
 .note { color: var(--muted); font-size: 12.5px; margin-top: 14px; line-height: 1.45; }
 </style></head>
 <body><div class="wrap">
   <div class="top">
-    <div><h2>Measured, not promised</h2><p class="sub">Opus 5.5 and Sonnet 5.5, default vs ConciseClaude 6.2, every case run twice, depth question excluded. Single-turn replies graded blind against key-point checklists.</p></div>
-    <div class="legend"><span><i class="sw" style="background:var(--s)"></i>Sonnet</span><span><i class="sw" style="background:var(--o)"></i>Opus</span></div>
+    <div><h2>Measured, not promised</h2><p class="sub">Opus, Sonnet and Haiku 5.5, default vs ConciseClaude 6.3.1, every case run twice, depth question excluded. Single-turn replies graded blind against key-point checklists.</p></div>
+    <div class="legend"><span><i class="sw" style="background:var(--o)"></i>Opus</span><span><i class="sw" style="background:var(--s)"></i>Sonnet</span><span><i class="sw" style="background:var(--h)"></i>Haiku</span></div>
   </div>
   <div class="grid">
     <div class="card">
       <h3>Reduction vs default</h3>
-      <div class="row"><div class="lab">Reply length</div><div class="bars"><div class="bar" style="width:61%;background:var(--s)"><span>−61%</span></div><div class="bar" style="width:64%;background:var(--o)"><span>−64%</span></div></div></div>
-      <div class="row"><div class="lab">Output tokens</div><div class="bars"><div class="bar" style="width:36%;background:var(--s)"><span>−36%</span></div><div class="bar" style="width:48%;background:var(--o)"><span>−48%</span></div></div></div>
-      <div class="row"><div class="lab">Wait time</div><div class="bars"><div class="bar" style="width:22%;background:var(--s)"><span>−22%</span></div><div class="bar" style="width:34%;background:var(--o)"><span>−34%</span></div></div></div>
-      <div class="row"><div class="lab">Cost</div><div class="bars"><div class="bar" style="width:13%;background:var(--s)"><span>−13%</span></div><div class="bar" style="width:23%;background:var(--o)"><span>−23%</span></div></div></div>
+      <div class="row"><div class="lab">Reply length</div><div class="bars"><div class="bar" style="width:67%;background:var(--o)"><span>−67%<em>Opus</em></span></div><div class="bar" style="width:60%;background:var(--s)"><span>−60%<em>Sonnet</em></span></div><div class="bar" style="width:46%;background:var(--h)"><span>−46%<em>Haiku</em></span></div></div></div>
+      <div class="row"><div class="lab">Output tokens</div><div class="bars"><div class="bar" style="width:49%;background:var(--o)"><span>−49%</span></div><div class="bar" style="width:29%;background:var(--s)"><span>−29%</span></div><div class="bar" style="width:28%;background:var(--h)"><span>−28%</span></div></div></div>
+      <div class="row"><div class="lab">Wait time</div><div class="bars"><div class="bar" style="width:37%;background:var(--o)"><span>−37%</span></div><div class="bar" style="width:17%;background:var(--s)"><span>−17%</span></div><div class="bar" style="width:17%;background:var(--h)"><span>−17%</span></div></div></div>
+      <div class="row"><div class="lab">Cost</div><div class="bars"><div class="bar" style="width:24%;background:var(--o)"><span>−24%</span></div><div class="bar" style="width:4%;background:var(--s)"><span>−4%</span></div><div class="bar" style="width:8%;background:var(--h)"><span>−8%</span></div></div></div>
     </div>
     <div class="card">
       <h3>What it keeps</h3>
       <div class="cov">
         <span class="h">Key points covered</span><span class="h">Default</span><span class="h">Concise</span>
-        <span>Sonnet</span><b>95%</b><b>83%</b>
-        <span>Opus</span><b>98%</b><b>87%</b>
+        <span>Opus</span><b>97%</b><b>83%</b>
+        <span>Sonnet</span><b>94%</b><b>84%</b>
+        <span>Haiku</span><b>92%</b><b>88%</b>
       </div>
-      <p class="note">Asked for depth, it gives depth. No reply was judged too terse. Cost falls most in conversation, is level in coding, and rises only for a single cold question.</p>
+      <p class="note">Asked for depth, it gives depth. No reply was judged too terse. The saving is in conversation; a coding session or a single cold question costs about the same as default or a little more.</p>
     </div>
   </div>
 </div></body></html>

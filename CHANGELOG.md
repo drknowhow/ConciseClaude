@@ -17,7 +17,8 @@ this file disagree with it.
   place of bold-label bullets, a shorter Evidence section, and the 3.x
   migration steps moved to `IMPLEMENT.md`. `IMPLEMENT.md` now lists all
   three hook entries to remove on uninstall and runs every test file.
-- The Pages site leads with the 6.2 benchmark write-up.
+- The Pages site leads with the benchmark write-up, which now includes a
+  6.3.1 run on Opus, Sonnet and Haiku; the README charts show it.
 
 ## 6.3.0 (2026-10-15)
 - Haiku gets the whole rule set: the style no longer tells Haiku to ignore

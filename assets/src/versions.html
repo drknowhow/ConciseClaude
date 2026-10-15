@@ -24,18 +24,18 @@ svg text { font: 12px "Segoe UI", system-ui, sans-serif; }
     <div class="legend"><span><i class="sw" style="background:var(--o)"></i>Opus</span><span><i class="sw" style="background:var(--s)"></i>Sonnet</span></div>
   </div>
   <div class="grid" id="grid"></div>
-  <p class="note">4.0 and 5.0: 2026-10-04 benchmark. 6.1 and 6.2: 2026-10-15 benchmark on Opus 5.5 and Sonnet 5.5, with a different question set and grader, so coverage compares within a run, not across the two. 4.0's output was not reported. Tells: bold spans, emoji, arrows, decorative metaphors and similar, per single-turn reply. On Haiku 5.5, 6.2 cost 10% more than default and 6.3 breaks even.</p>
+  <p class="note">4.0 and 5.0: 2026-10-04 benchmark. 6.1, 6.2 and 6.3.1: 2026-10-15 benchmarks on Opus 5.5 and Sonnet 5.5, with a different question set and grader, so coverage compares within a run, not across the two. 4.0's output was not reported. Tells: bold spans, emoji, arrows, decorative metaphors and similar, per single-turn reply. On Haiku 5.5, 6.2 cost 10% more than default and 6.3.1 cost 8% less.</p>
 </div>
 <script>
 const panels = [
-  { title: "Cost", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2"],
-    opus: [-24, -30, -8, -23], sonnet: [-4, -6, 9, -13], min: -40, max: 20, step: 20, unit: "%" },
-  { title: "Output tokens", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2"],
-    opus: [null, -57, -47, -48], sonnet: [null, -37, -25, -36], min: -60, max: 0, step: 20, unit: "%" },
-  { title: "Key points covered", sub: "points behind default, nearer 0 is better", x: ["4.0", "5.0", "6.1", "6.2"],
-    opus: [-6, -6, -12, -11], sonnet: [-11, -4, -18, -12], min: -20, max: 0, step: 5, unit: "" },
-  { title: "Writing tells", sub: "per reply, lower is better", x: ["default", "5.1", "6.1", "6.2"],
-    opus: [9.5, 5.7, 0, 0.1], sonnet: [7.3, 4.3, 0.1, 0.8], min: 0, max: 10, step: 5, unit: "" },
+  { title: "Cost", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"],
+    opus: [-24, -30, -8, -23, -24], sonnet: [-4, -6, 9, -13, -4], min: -40, max: 20, step: 20, unit: "%" },
+  { title: "Output tokens", sub: "% vs default, lower is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"],
+    opus: [null, -57, -47, -48, -49], sonnet: [null, -37, -25, -36, -29], min: -60, max: 0, step: 20, unit: "%" },
+  { title: "Key points covered", sub: "points behind default, nearer 0 is better", x: ["4.0", "5.0", "6.1", "6.2", "6.3.1"],
+    opus: [-6, -6, -12, -11, -14], sonnet: [-11, -4, -18, -12, -10], min: -20, max: 0, step: 5, unit: "" },
+  { title: "Writing tells", sub: "per reply, lower is better", x: ["default", "5.1", "6.1", "6.2", "6.3.1"],
+    opus: [9.5, 5.7, 0, 0.1, 0], sonnet: [7.3, 4.3, 0.1, 0.8, 1.1], min: 0, max: 10, step: 5, unit: "" },
 ];
 const W = 250, H = 250, L = 40, R = 28, T = 16, B = 26, BAR = 14, GAP = 2;
 const ns = "http://www.w3.org/2000/svg";

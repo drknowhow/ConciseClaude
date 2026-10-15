@@ -7,7 +7,7 @@
 <p align="center"><b>Claude Code that gets to the point. Same work, a third of the words.</b></p>
 
 <p align="center">
-  <a href="docs/bench-2026-10-15-v6.md"><img src="https://img.shields.io/badge/benchmark-6.2,_graded_blind-2a78d6" alt="Benchmark"></a>
+  <a href="docs/bench-2026-10-15-v6.md"><img src="https://img.shields.io/badge/benchmark-6.3.1,_graded_blind-2a78d6" alt="Benchmark"></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdrknowhow%2FConciseClaude%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=1baf7a" alt="Version"></a>
   <img src="https://img.shields.io/badge/Claude_Code-plugin-eb6834" alt="Claude Code plugin">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-52514e" alt="License"></a>
@@ -29,18 +29,18 @@ you get it, and errors, risks and safety steps are never trimmed. Code comes
 without commentary, and a meter measures every reply so the rules don't
 drift.
 
-In the 6.2 benchmark ([write-up](docs/bench-2026-10-15-v6.md)), replies on
-Opus 5.5 and Sonnet 5.5 were about 62% shorter, output tokens fell 48% and
-36%, and replies arrived 34% and 22% sooner. Cost fell 23% on Opus and 13%
-on Sonnet: most in conversation, level in coding, slightly up only for a
-single cold question. Blind graders found 85% of the key points a full
-answer covers, against 96% for the default, with no reply judged too terse.
+In the 6.3.1 benchmark ([write-up](docs/bench-2026-10-15-v6.md)), replies
+were 67% shorter on Opus 5.5, 60% on Sonnet 5.5 and 46% on Haiku 5.5. Cost
+fell 24%, 4% and 8%. The saving is in conversation; a coding session or a
+single cold question costs about the same as default or a little more.
+Blind graders found 83 to 88% of the key points a full answer covers,
+against 92 to 97% for the default, with no reply judged too terse.
 A Stop hook scores every reply and nudges Claude when one runs long;
 `/conciseclaude:meter report` shows how it's doing.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.png">
-  <img src="assets/results-light.png" alt="Benchmark: reply length, output tokens, wait time and cost reductions on Sonnet and Opus, with key points covered.">
+  <img src="assets/results-light.png" alt="Benchmark of 6.3.1: reply length, output tokens, wait time and cost reductions on Opus, Sonnet and Haiku, with key points covered.">
 </picture>
 
 ## Install
@@ -55,9 +55,8 @@ is enabled, even if you've chosen another output style. To turn it off, run
 from Git Bash. Without Python the rules still apply; replies just aren't
 measured.
 
-The rules apply to Opus, Sonnet and Haiku. On Haiku 5.5 the plugin breaks
-even on cost: most of Haiku's output is hidden thinking, which the style
-doesn't shorten, so the saving on replies only pays for the rule text.
+The rules apply to Opus, Sonnet and Haiku. Haiku saves the least: most of
+its output is hidden thinking, which the style doesn't shorten.
 
 To upgrade, run `claude plugin update conciseclaude@conciseclaude` and
 restart. To measure commits too, run `/conciseclaude:diff-hooks` in each repo
@@ -117,8 +116,8 @@ The rules name each pattern and give the replacement: cut points instead of
 words, use the literal word, say what was checked and what wasn't. The
 `human-prose` skill applies the same list to PR descriptions, docs and
 email. The meter counts the patterns in every reply and `report` shows the
-rates. In the 6.2 benchmark they fell from 7 to 10 per reply on the default
-style to under one.
+rates. In the 6.3.1 benchmark they fell from 7 to 9 per reply on the
+default style to none on Opus, one on Sonnet and two on Haiku.
 
 ## What code and repo text look like
 The same rule set covers what Claude writes for other people to maintain
@@ -177,18 +176,20 @@ exceptions, forensic comments, dividers) and only warns on ratios.
 ## Evidence
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/versions-dark.png">
-  <img src="assets/versions-light.png" alt="Versions 4.0, 5.0, 6.1 and 6.2 against the default style on Opus and Sonnet: cost, output tokens, key points covered, and writing tells per reply.">
+  <img src="assets/versions-light.png" alt="Versions 4.0, 5.0, 6.1, 6.2 and 6.3.1 against the default style on Opus and Sonnet: cost, output tokens, key points covered, and writing tells per reply.">
 </picture>
 
 Each release against the default style. 4.0 and 5.0 come from the
 2026-10-04 benchmark ([interactive page](https://drknowhow.github.io/ConciseClaude/benchmark/)),
-6.1 and 6.2 from the 2026-10-15 run ([write-up](docs/bench-2026-10-15-v6.md)),
+6.1 to 6.3.1 from the 2026-10-15 runs ([write-up](docs/bench-2026-10-15-v6.md)),
 which used a different question set and grader, so compare coverage within
 a run rather than across the two. 6.1 cut the writing tells to near zero but
 cost more than 5.0, mostly from longer rule text; 6.2 halved that text and
-won most of the cost back. Coverage is the open gap: 6.2 covers 85% of key
-points against 96% for the default. Haiku isn't plotted; there 6.2 cost 10%
-more than the default and 6.3 breaks even.
+won most of the cost back. Sonnet's saving varies most between runs: 13% for
+6.2 and 4% for 6.3.1, with the same rules apart from one line about Haiku.
+Coverage is the open gap: 6.3.1 covers 83% of key points on Opus and 84% on
+Sonnet, against 97% and 94% for the default. Haiku isn't plotted; there 6.2
+cost 10% more than the default and 6.3.1 8% less.
 
 An earlier controlled A/B on Sonnet ([write-up](docs/token-ab-2026-10-03.md))
 found the same shape in six-turn conversations: output tokens fell 28% and
