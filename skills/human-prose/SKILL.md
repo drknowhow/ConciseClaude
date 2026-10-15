@@ -82,9 +82,10 @@ ConciseClaude repo.
 6. Check that nothing true got cut on the way.
 
 ## PR and review comments
-Write like a terse engineer. A PR body gives the problem, the resulting
-behaviour and the verification that ran, plus the cause when it helps a
-reviewer judge the change. Also strip: "Let me…", "Certainly", "Hope this
+Write like a terse engineer. A PR body is usually two to five sentences,
+under about 800 characters: the problem, its cause when that isn't obvious,
+the resulting behaviour, any rollout risk, and the verification that ran.
+Tickets follow `rules/code.md`. Also strip: "Let me…", "Certainly", "Hope this
 helps", "Happy to iterate", hedges ("it appears there may be"), recaps of the
 diff, "Summary:" / "TL;DR", First/Second/Finally structure, the debugging
 story.

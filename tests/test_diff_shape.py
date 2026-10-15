@@ -30,6 +30,11 @@ def test_divider_forensic_and_shouting():
     assert not r["ok"]
 
 
+def test_todo_may_cite_its_issue():
+    assert ds.analyze_diff(diff("a.py", ["# TODO(#412): drop once the v2 API ships", "x = 1"]))["findings"] == []
+    assert codes(ds.analyze_diff(diff("a.py", ["# Fixed in #412", "x = 1"]))) == ["forensic-comment"]
+
+
 def test_python_except_and_docstring_checks():
     source = (
         "def tiny(x):\n"
@@ -61,13 +66,31 @@ def test_empty_catch_in_c_family():
     assert codes(r) == ["swallowed-except"]
 
 
+def interleave(every):
+    out = []
+    for i in range(40):
+        out.append("v%d = %d" % (i, i))
+        if i % every == every - 1:
+            out.append("# note %d" % i)
+    return out
+
+
 def test_comment_share_thresholds():
-    code = ["v%d = %d" % (i, i) for i in range(40)]
-    r = ds.analyze_diff(diff("a.py", code + ["# note %d" % i for i in range(8)]))
+    r = ds.analyze_diff(diff("a.py", interleave(5)))
     assert codes(r) == ["comment-share"] and r["findings"][0]["level"] == "warn"
-    r = ds.analyze_diff(diff("a.py", code + ["# note %d" % i for i in range(20)]))
+    r = ds.analyze_diff(diff("a.py", interleave(2)))
     assert r["findings"][0]["level"] == "fail"
-    assert ds.analyze_diff(diff("a.py", code + ["# one"]))["findings"] == []
+    assert ds.analyze_diff(diff("a.py", interleave(40)))["findings"] == []
+
+
+def test_long_comment_block_warns():
+    block = ["# line %d" % i for i in range(6)]
+    r = ds.analyze_diff(diff("a.py", block + ["x = 1"]))
+    assert codes(r) == ["long-comment"] and r["ok"] and r["findings"][0]["line"] == 1
+    assert ds.analyze_diff(diff("a.py", block[:5] + ["x = 1"]))["findings"] == []
+    split = block[:3] + [""] + block[3:] + ["x = 1"]
+    assert ds.analyze_diff(diff("a.py", split))["findings"] == []
+    assert codes(ds.analyze_diff(diff("a.ts", ["// c"] * 7 + ["go();"]))) == ["long-comment"]
 
 
 def test_large_commit_and_lockfiles_skipped():

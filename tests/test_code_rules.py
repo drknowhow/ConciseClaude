@@ -20,9 +20,16 @@ def run(payload, state):
 def test_rules_sent_once_per_session(tmp_path):
     first = json.loads(run({"session_id": "a", "tool_name": "Write"}, tmp_path))
     assert first["hookSpecificOutput"]["hookEventName"] == "PostToolUse"
-    assert "## Commits" in first["hookSpecificOutput"]["additionalContext"]
+    assert "## Commit messages" in first["hookSpecificOutput"]["additionalContext"]
     assert run({"session_id": "a", "tool_name": "Edit"}, tmp_path) == ""
     assert run({"session_id": "b", "tool_name": "Edit"}, tmp_path) != ""
+
+
+def test_rules_load_on_c3_edits():
+    hooks = json.loads((SCRIPT.parent / "hooks.json").read_text("utf-8"))["hooks"]["PostToolUse"]
+    matched = {name for entry in hooks if "code_rules.py" in entry["hooks"][0]["command"]
+               for name in entry["matcher"].split("|")}
+    assert {"Edit", "Write", "mcp__c3__c3_edit"} <= matched
 
 
 def test_haiku_session_gets_no_rules(tmp_path):

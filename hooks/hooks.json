@@ -7,7 +7,7 @@
       { "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" reply_shape.py prompt", "timeout": 10 } ] }
     ],
     "PostToolUse": [
-      { "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+      { "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__c3__c3_edit",
         "hooks": [ { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" code_rules.py", "timeout": 10 } ] }
     ],
     "Stop": [

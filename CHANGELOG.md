@@ -10,6 +10,25 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.1.0 (2026-10-15)
+Code comments and repo text: less is more. The evidence is in
+`docs/repo-text-audit-2026-10-15.md`.
+- The code rules load when C3's `c3_edit` makes the first edit, as well as
+  on `Edit` and `Write`. Before this, sessions that edit through C3 never
+  received them.
+- Comments default to none. One that exists states, in a line or two, what
+  the code can't show: an invariant, a policy, a failure consequence or an
+  external constraint. A comment whose deletion wouldn't confuse a future
+  reader isn't written. No history, task references, internal-rule
+  citations or guarantees the code doesn't enforce, and a comment that
+  explains why is never deleted.
+- New sections for tests, PR descriptions (two to five sentences, under
+  about 800 characters, checked against the diff), issues and Jira tickets,
+  review comments and READMEs, with short examples from real rewrites.
+  Commits follow the repo's own style.
+- The diff meter warns on a block of six or more added comment lines, and
+  no longer counts a TODO that cites its issue as a forensic comment.
+
 ## 6.0.0 (2026-10-15)
 Rules against the writing habits readers complain about in Claude's output.
 The evidence, from four research passes and 45 days of our own transcripts,
