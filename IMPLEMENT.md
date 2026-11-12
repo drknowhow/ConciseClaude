@@ -32,12 +32,15 @@ and asking.
    - If any of these already exist and differ from this package, show the diff
      and ask before replacing: `~/.claude/output-styles/concise.md`,
      `~/.claude/commands/v.md`, `~/.claude/commands/u.md`,
-     `~/.claude/skills/human-prose/`.
+     `~/.claude/commands/reader.md`, `~/.claude/skills/human-prose/`.
 
 2. **Rules.** Copy `output-styles/concise.md` to `~/.claude/output-styles/concise.md`
    and `rules/code.md` to `~/.claude/rules/code.md`.
 
-3. **One-turn stages.** Copy `commands/v.md` and `commands/u.md` to `~/.claude/commands/`.
+3. **Commands.** Copy `commands/v.md`, `commands/u.md` and `commands/reader.md`
+   to `~/.claude/commands/`. In the copied `reader.md`, replace
+   `${CLAUDE_PLUGIN_ROOT}/hooks/reply_shape.py` with the absolute path of
+   `~/.claude/hooks/reply_shape.py`.
 
 4. **Writing pass.** Copy `skills/human-prose/` to `~/.claude/skills/human-prose/`.
 
@@ -80,7 +83,10 @@ and asking.
    your reasoning"), list them and ask which to remove. Two rule sets is the
    failure this system exists to fix.
 
-8. **Arm feedback.** `<PYTHON> ~/.claude/hooks/reply_shape.py mode nudge`
+8. **Arm feedback.** `<PYTHON> ~/.claude/hooks/reply_shape.py mode nudge`.
+   Then ask the user how technical they are and offer to save it with
+   `<PYTHON> ~/.claude/hooks/reply_shape.py reader new|some|expert` or a
+   sentence in their own words. Skip it if they'd rather not say.
 
 9. **Verify**
    - Pipe a sample Stop payload into the hook the way Claude Code will:
@@ -114,12 +120,13 @@ metered twice and the rules load twice.
    `"outputStyle": "Concise"`.
 2. Delete `~/.claude/output-styles/concise.md`, `~/.claude/rules/code.md`,
    `~/.claude/commands/v.md`, `~/.claude/commands/u.md`,
-   `~/.claude/skills/human-prose/`, `~/.claude/hooks/reply_shape.py` and
+   `~/.claude/commands/reader.md`, `~/.claude/skills/human-prose/`,
+   `~/.claude/hooks/reply_shape.py` and
    `~/.claude/hooks/code_rules.py`.
 3. Delete the `## Replies` block from `~/.claude/CLAUDE.md`.
 4. Keep `~/.claude/hooks/diff_shape.py` until you've rerun
    `/conciseclaude:diff-hooks` in each repo that has the git hooks; the old
    shims call that file.
 
-The reply log in `~/.claude/reply_shape/` stays where it is, so `report`
-history carries over.
+The reply log and the reader level in `~/.claude/reply_shape/` stay where
+they are, so `report` history and the level carry over.

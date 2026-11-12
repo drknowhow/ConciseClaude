@@ -196,6 +196,69 @@ def test_protected_feedback_points_to_file_or_v():
     assert "/v" in rs.feedback(row, "nudge")
 
 
+def cli(state, *args):
+    env = {k: v for k, v in os.environ.items() if k not in ("REPLY_SHAPE_MODE", "REPLY_SHAPE_READER")}
+    env["REPLY_SHAPE_DIR"] = str(state)
+    proc = subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, env=env, timeout=30)
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout.decode("utf-8").strip()
+
+
+def context(out):
+    return json.loads(out)["hookSpecificOutput"]["additionalContext"]
+
+
+def test_reader_note_is_sent_once_then_again_when_the_level_changes(tmp_path):
+    cli(tmp_path, "reader", "NEW")
+    assert "new to programming" in context(run("prompt", {"session_id": "r1", "prompt": "hi"}, tmp_path, "nudge"))
+    assert run("prompt", {"session_id": "r1", "prompt": "next"}, tmp_path, "nudge") == ""
+    cli(tmp_path, "reader", "I", "know", "SQL,", "not", "git")
+    assert '"I know SQL, not git"' in context(run("prompt", {"session_id": "r1", "prompt": "next"}, tmp_path, "nudge"))
+    cli(tmp_path, "reader", "clear")
+    assert "cleared" in context(run("prompt", {"session_id": "r1", "prompt": "next"}, tmp_path, "nudge"))
+    assert run("prompt", {"session_id": "r1", "prompt": "next"}, tmp_path, "nudge") == ""
+
+
+def test_reader_note_repeats_after_the_resend_interval(tmp_path):
+    cli(tmp_path, "reader", "some")
+    outs = [run("prompt", {"session_id": "r2", "prompt": "hi"}, tmp_path, "off") for _ in range(rs.READER_RESEND + 1)]
+    assert outs[0] and outs[-1] and not any(outs[1:-1])
+
+
+def test_reader_level_widens_the_budget_except_for_ultra(tmp_path):
+    cli(tmp_path, "reader", "new")
+    assert run("stop", {"session_id": "r3", "last_assistant_message": LONG}, tmp_path, "block") == ""
+    row = json.loads((tmp_path / "reply_shape.jsonl").read_text("utf-8").splitlines()[-1])
+    assert row["budget"] == 1100 and row["reader"] == "new"
+    run("prompt", {"session_id": "r3", "prompt": "/u status?"}, tmp_path, "block")
+    out = run("stop", {"session_id": "r3", "last_assistant_message": "word " * 40}, tmp_path, "block")
+    assert json.loads(out)["decision"] == "block"
+
+
+def test_nudge_quotes_the_widened_budgets(tmp_path):
+    cli(tmp_path, "reader", "some")
+    run("stop", {"session_id": "r4", "last_assistant_message": LONG}, tmp_path, "nudge")
+    note = context(run("prompt", {"session_id": "r4", "prompt": "next"}, tmp_path, "nudge"))
+    assert "budget 750" in note and "get 1050 only" in note
+
+
+def test_own_words_reader_stays_out_of_the_log(tmp_path):
+    cli(tmp_path, "reader", "nurse", "learning", "Python")
+    run("stop", {"session_id": "r5", "last_assistant_message": "ok"}, tmp_path, "off")
+    log = (tmp_path / "reply_shape.jsonl").read_text("utf-8")
+    assert "nurse" not in log and json.loads(log.splitlines()[-1])["reader"] == "custom"
+
+
+def test_mode_and_reader_settings_do_not_overwrite_each_other(tmp_path):
+    cli(tmp_path, "reader", "expert")
+    assert cli(tmp_path, "mode") == "nudge"
+    cli(tmp_path, "mode", "block")
+    cli(tmp_path, "reader", "new")
+    assert cli(tmp_path, "mode") == "block" and "new to programming" in cli(tmp_path, "reader")
+    cli(tmp_path, "mode", "off")
+    assert "new to programming" in cli(tmp_path, "reader")
+
+
 def test_bad_payload_never_fails(tmp_path):
     env = {**os.environ, "REPLY_SHAPE_DIR": str(tmp_path)}
     proc = subprocess.run([sys.executable, str(SCRIPT), "stop"], input=b"not json", capture_output=True, env=env, timeout=30)

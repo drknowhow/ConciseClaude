@@ -10,6 +10,33 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.4.0 (2026-11-12)
+Replies written for the person reading them. Results are in
+`docs/bench-2026-11-12-v64.md`: with no level set, 6.4.0 covers 75% of key
+points against 6.3.1's 76% and costs the same or less; with `new`, graders
+scored replies 3.0 of 5 for a newcomer against 2.1.
+- You can tell Claude how technical you are: `/conciseclaude:reader new`,
+  `some`, `expert`, or a sentence in your own words (`clear` removes it). The
+  prompt hook passes the level to Claude at the start of a session, when it
+  changes, and every tenth prompt. Without one, Claude assumes a working
+  developer unless your words show otherwise.
+- Below that level, Claude explains a technical term in a few plain words
+  where it first appears and says what a command does before giving it. That
+  takes room, so the budget is 1,100 characters for `new` (1,400 labeled)
+  and 750 for `some` or your own words (1,050 labeled). `expert` and no
+  level keep 600 and 900.
+- The status tag is for reports on work. An answer to a question opens with
+  the answer and has no tag, and the nudge asks for a tag only on a work
+  report. The report's `verdict1st` column is now `tagged`; expect it to
+  fall, since answers no longer count.
+- The rule against metaphors is about decorative ones; a comparison that
+  explains a concept is allowed. Replies say "I" for what Claude did and
+  "you" for what you do.
+- The style is about 480 characters longer, roughly 120 input tokens a
+  session. Setting the reader level no longer resets the meter's mode, and
+  `config.json` now holds the level as you typed it; the log records only
+  `new`, `some`, `expert` or `custom`.
+
 ## 6.3.1 (2026-10-15)
 - The manual install's PostToolUse hook now matches C3's `c3_edit`, as the
   plugin's has since 6.1, so code rules load there too.
