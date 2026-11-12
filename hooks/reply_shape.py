@@ -2,11 +2,13 @@
 """Reply shape: measure the prose in each Claude Code reply and feed overage back.
 
   reply_shape.py stop     Stop hook: measures the final reply, logs one row; block mode refuses once.
-  reply_shape.py prompt   UserPromptSubmit hook: records /v or /u, logs the quality signal, nudges.
+  reply_shape.py prompt   UserPromptSubmit hook: records /v or /u, logs the quality signal, nudges, passes on the reader level.
   reply_shape.py report [--days N] [--json] | mode [off|nudge|block] | measure [--profile P] | version
+  reply_shape.py reader [new|some|expert|<own words>|clear]   The user's technical level; no argument shows it.
 
 Stdlib only, Python 3.8+. Hook failures exit 0, so a hook never costs a turn.
 State: ~/.claude/reply_shape/ (REPLY_SHAPE_DIR); the log stores sizes, tell counts and a hash per reply, never text.
+config.json there holds the mode and the reader level as the user typed it.
 """
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "6.3.1"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.4.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
@@ -33,6 +35,24 @@ BUDGETS: Dict[str, Optional[int]] = {
 MODES = ("off", "nudge", "block")
 DEFAULT_MODE = "nudge"  # used when no config exists; block is always explicit
 TAIL_BYTES = 1024 * 1024
+
+# The user's technical level: (extra prose chars, the note Claude gets). Explaining a term takes room,
+# so a reader who needs terms explained gets a larger budget instead of a denser reply.
+READERS: Dict[str, Tuple[int, str]] = {
+    "new": (500, "The person you're writing to is new to programming and said so. Use everyday words. When a "
+                 "technical term is needed, explain it in a few plain words the first time it appears. Before a "
+                 "command, say what it will do; after it, what they should see. Simplify the wording, never the "
+                 "substance: keep every risk, safety step, precondition and the choice the answer turns on that "
+                 "you would give an expert."),
+    "some": (150, "The person you're writing to codes a little and isn't a specialist. Assume the basics: files, "
+                  "variables, functions, running a command. Explain a more specialised term in a few plain words "
+                  "the first time it appears."),
+    "expert": (0, "The person you're writing to is an experienced developer. Use standard technical terms "
+                  "without explaining them."),
+}
+CUSTOM_READER_BONUS = 150
+READER_MAX = 200
+READER_RESEND = 10  # prompts between repeats of the note, so it outlives context compaction
 
 # Literal regions are never prose. Order matters: fences before inline spans.
 _FENCE_RE = re.compile(r"```.*?(?:```|\Z)|~~~.*?(?:~~~|\Z)", re.S)
@@ -141,8 +161,8 @@ def strip_literals(text: str) -> Tuple[str, int]:
     return out, literal
 
 
-def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
-    """Measure one reply. Pure; never raises on string input."""
+def measure(text: str, profile: Optional[str] = None, bonus: int = 0) -> Dict[str, Any]:
+    """Measure one reply. Pure; never raises on string input. `bonus` widens the default and labeled budgets."""
     text = text or ""
     prose_raw, literal = strip_literals(text)
     prose = " ".join(_MARKUP_RE.sub("", _TAG_RE.sub("", prose_raw)).split())
@@ -152,6 +172,8 @@ def measure(text: str, profile: Optional[str] = None) -> Dict[str, Any]:
     if prof not in BUDGETS:
         prof = "default"
     budget = BUDGETS[prof]
+    if budget is not None and prof != "ultra":
+        budget += bonus
     over = max(0, len(prose) - budget) if budget is not None else 0
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     first = lines[0] if lines else ""
@@ -181,16 +203,17 @@ def feedback(row: Dict[str, Any], kind: str) -> str:
                 "Make this reply shorter by cutting points; keep each sentence whole.")
     else:
         lead = f"reply-shape: {p} prose chars > {b} ({prof}), over by {o}. Rewrite the reply once, shorter. Don't mention this check."
+    labeled = BUDGETS["protected"] + ((b or 0) - BUDGETS["default"] if prof == "default" else 0)
     if prof == "protected":
-        hint = (" Labeled replies still cap at 900: keep the decision, the risk and the literals in the reply; "
+        hint = (f" Labeled replies still cap at {b}: keep the decision, the risk and the literals in the reply; "
                 "put background in a file, or offer /v.")
     else:
         hint = (" Cut narration, not articles or verbs; code, paths, commands and error text stay verbatim. "
                 "Security, destructive, error, "
-                "migration, planning and review replies get 900 only under a true **Risk:** / **Plan:** / "
+                f"migration, planning and review replies get {labeled} only under a true **Risk:** / **Plan:** / "
                 "**Error:** / **Review:** label.")
     if not row.get("verdict_first"):
-        hint += " It also lacked a result line: start with a bold status tag such as **DONE**, then the verdict."
+        hint += " If it reported on work, it should also have opened with a bold status tag such as **DONE**."
     return lead + hint
 
 
@@ -202,27 +225,94 @@ def _safe(sid: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", sid)[:80] or "unknown"
 
 
+def _config() -> Optional[Dict[str, Any]]:
+    """The saved settings: {} when there are none, None when the file can't be read."""
+    cfg = state_dir() / "config.json"
+    if not cfg.exists():
+        return {}
+    try:
+        data = json.loads(cfg.read_text("utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _save_config(**changes: Any) -> Path:
+    """Merge `changes` into the saved settings; a None value removes its key."""
+    cfg = state_dir() / "config.json"
+    data = {**(_config() or {}), **changes, "set_at": _now()}
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text(json.dumps({k: v for k, v in data.items() if v is not None}, indent=2), "utf-8")
+    return cfg
+
+
 def get_mode() -> str:
     env = (os.environ.get("REPLY_SHAPE_MODE") or "").strip().lower()
     if env in MODES:
         return env
-    cfg = state_dir() / "config.json"
-    if not cfg.exists():
-        return DEFAULT_MODE
-    try:
-        mode = str(json.loads(cfg.read_text("utf-8")).get("mode", "")).strip().lower()
-    except (OSError, ValueError, AttributeError):
+    data = _config()
+    if data is None:
         return "off"  # a broken switch fails toward silence, never toward blocking
+    if "mode" not in data:
+        return DEFAULT_MODE
+    mode = str(data["mode"]).strip().lower()
     return mode if mode in MODES else "off"
 
 
 def set_mode(mode: str) -> Path:
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}")
-    cfg = state_dir() / "config.json"
-    cfg.parent.mkdir(parents=True, exist_ok=True)
-    cfg.write_text(json.dumps({"mode": mode, "set_at": _now()}, indent=2), "utf-8")
-    return cfg
+    return _save_config(mode=mode)
+
+
+def clean_reader(value: Any) -> str:
+    """One line, capped; a preset name in any case becomes the preset."""
+    text = " ".join(str(value or "").replace('"', "'").split())[:READER_MAX]
+    return text.lower() if text.lower() in READERS else text
+
+
+def get_reader() -> str:
+    return clean_reader(os.environ.get("REPLY_SHAPE_READER") or (_config() or {}).get("reader"))
+
+
+def reader_bonus(reader: str) -> int:
+    if not reader:
+        return 0
+    return READERS[reader][0] if reader in READERS else CUSTOM_READER_BONUS
+
+
+def reader_note(reader: str) -> str:
+    if reader in READERS:
+        body = READERS[reader][1]
+    else:
+        body = (f'The person you\'re writing to describes their background as: "{reader}". Skip what that '
+                "background covers. Explain in a few plain words, on first use, any term from outside it.")
+    bonus = reader_bonus(reader)
+    if bonus:
+        body += (f" Budget for this reader: {BUDGETS['default'] + bonus} prose chars, "
+                 f"{BUDGETS['protected'] + bonus} under a label. An ask for depth still lifts it.")
+    return "[reader] " + body
+
+
+def _reader_due(sid: str) -> Optional[str]:
+    """The reader note, when this session hasn't been given the current one lately."""
+    reader = get_reader()
+    marker = state_dir() / "reader_sent" / _safe(sid)
+    try:
+        key, _, count = marker.read_text("utf-8").partition(":")
+        seen = int(count)
+    except (OSError, ValueError):
+        key, seen = "", 0
+    if not reader:
+        if not key:
+            return None
+        marker.unlink(missing_ok=True)
+        return "[reader] The reader level was cleared. Assume a working developer unless their words show otherwise."
+    now = hashlib.sha1(reader.encode("utf-8", "replace")).hexdigest()[:12]
+    due = key != now or seen >= READER_RESEND
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text(f"{now}:{1 if due else seen + 1}", "utf-8")
+    return reader_note(reader) if due else None
 
 
 def _now() -> str:
@@ -310,15 +400,19 @@ def cmd_stop(payload: Dict[str, Any]) -> None:
         return
     revision = bool(payload.get("stop_hook_active"))
     stage = _read_stage(sid) if sid else None
-    shape = measure(text, profile=stage)
-    _append({
+    reader = get_reader()
+    shape = measure(text, profile=stage, bonus=reader_bonus(reader))
+    row = {
         "ts": _now(),
         "session_id": sid,
         "sha": hashlib.sha1(text.encode("utf-8", "replace")).hexdigest()[:12],
         "v": __version__,
         "revision": revision,
         **shape,
-    })
+    }
+    if reader:
+        row["reader"] = reader if reader in READERS else "custom"  # the user's own words stay out of the log
+    _append(row)
     if not shape["ok"] and not revision and get_mode() == "block":
         # Claude Code sets stop_hook_active on the retry, so this can fire at most once per reply.
         print(json.dumps({"decision": "block", "reason": feedback(shape, "block")}))
@@ -348,21 +442,20 @@ def cmd_prompt(payload: Dict[str, Any]) -> None:
         _append({"ts": _now(), "session_id": sid, "kind": "followup", "reply_sha": row.get("sha"),
                  "reply_profile": row.get("profile"), "signal": signal})
 
-    if get_mode() == "off":
-        return
-    if not row or row.get("ok", True):
-        return
-    marker = state_dir() / "nudged" / _safe(sid)
-    if marker.exists() and marker.read_text("utf-8").strip() == row.get("sha"):
-        return
-    marker.parent.mkdir(parents=True, exist_ok=True)
-    marker.write_text(str(row.get("sha", "")), "utf-8")
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "UserPromptSubmit",
-            "additionalContext": feedback(row, "nudge"),
-        }
-    }))
+    notes = [note] if (note := _reader_due(sid)) else []
+    if get_mode() != "off" and row and not row.get("ok", True):
+        marker = state_dir() / "nudged" / _safe(sid)
+        if not (marker.exists() and marker.read_text("utf-8").strip() == row.get("sha")):
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text(str(row.get("sha", "")), "utf-8")
+            notes.append(feedback(row, "nudge"))
+    if notes:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": "\n".join(notes),
+            }
+        }))
 
 
 def _pct(part: int, whole: int) -> int:
@@ -418,6 +511,7 @@ def cmd_report(days: float, as_json: bool) -> None:
             groups[prof] = subset
     result = {
         "version": __version__, "days": days, "mode": get_mode(), "log": str(_log_path()),
+        "reader": (reader if reader in READERS else "custom") if (reader := get_reader()) else None,
         "last_reply_at": rows[-1]["ts"] if rows else None,
         "sessions": len({r.get("session_id") for r in rows}),
         "groups": {k: _summary(v, followups) for k, v in groups.items()},
@@ -427,9 +521,10 @@ def cmd_report(days: float, as_json: bool) -> None:
     if as_json:
         print(json.dumps(result, indent=2))
         return
-    print(f"reply-shape {__version__} | last {days:g}d | mode={result['mode']} | {result['sessions']} sessions | "
+    print(f"reply-shape {__version__} | last {days:g}d | mode={result['mode']} | reader={result['reader'] or 'not set'} | "
+          f"{result['sessions']} sessions | "
           f"last reply logged {result['last_reply_at']}")
-    print(f"{'profile':<10}{'n':>6}{'median':>8}{'p90':>7}{'over':>7}{'verdict1st':>12}{'asked_more':>12}{'asked_shorter':>15}")
+    print(f"{'profile':<10}{'n':>6}{'median':>8}{'p90':>7}{'over':>7}{'tagged':>12}{'asked_more':>12}{'asked_shorter':>15}")
     for name, s in result["groups"].items():
         print(f"{name:<10}{s['n']:>6}{s['median']:>8}{s['p90']:>7}{s['over_pct']:>6}%{s['verdict_first_pct']:>11}%"
               f"{s['asked_more_pct']:>11}%{s['asked_shorter_pct']:>14}%")
@@ -451,6 +546,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     md.add_argument("value", nargs="?", choices=MODES)
     ms = sub.add_parser("measure")
     ms.add_argument("--profile", choices=tuple(BUDGETS))
+    rd = sub.add_parser("reader")
+    rd.add_argument("value", nargs="*")
     sub.add_parser("version")
     args = ap.parse_args(argv)
 
@@ -470,6 +567,17 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"mode={args.value} -> {set_mode(args.value)}")
         else:
             print(get_mode())
+    elif args.cmd == "reader":
+        value = clean_reader(" ".join(args.value))
+        if value.lower() in ("clear", "off", "none"):
+            _save_config(reader=None)
+            print("reader level cleared")
+        elif value:
+            _save_config(reader=value)
+            print(reader_note(value))
+        else:
+            current = get_reader()
+            print(reader_note(current) if current else "no reader level set: new | some | expert | your own words")
     elif args.cmd == "version":
         print(__version__)
     elif args.cmd == "measure":

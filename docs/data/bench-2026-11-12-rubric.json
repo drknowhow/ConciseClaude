@@ -1,0 +1,172 @@
+{
+ "qa0": [
+  "A process has its own memory space, while threads share the memory of the process they belong to.",
+  "Threads are cheaper to create and switch between, but shared state needs synchronization such as locks to avoid race conditions.",
+  "In CPython the Global Interpreter Lock lets only one thread run Python bytecode at a time, so threads do not speed up CPU-bound Python code.",
+  "Use threads (threading or ThreadPoolExecutor) or asyncio for I/O-bound work such as network calls or disk access, where the GIL is released while waiting.",
+  "Use processes (multiprocessing or ProcessPoolExecutor) for CPU-bound work to get true parallelism across cores.",
+  "Processes have higher startup and memory cost, and data passed between them must be pickled, so large or unpicklable objects are a problem.",
+  "Multiprocessing code must be guarded by `if __name__ == '__main__':`, which is required with the spawn start method used by default on Windows and macOS.",
+  "Free-threaded CPython builds (PEP 703, 3.13+) can remove the GIL, but they are optional and not yet the default."
+ ],
+ "qa1": [
+  "The likely cause is that the project root is not on sys.path in CI, so `import src...` cannot be resolved.",
+  "It passes locally because of environment differences, such as running from a different directory, an IDE adding the root to PYTHONPATH, or an editable install that exists only locally.",
+  "The preferred fix is to make the project installable (pyproject.toml) and run `pip install -e .` in the workflow before pytest.",
+  "An alternative fix is to set `pythonpath = [\".\"]` (or `src`) in the pytest config, or export PYTHONPATH in the workflow step.",
+  "Check that the workflow checks out the repo (actions/checkout) and runs pytest from the repository root, or sets working-directory correctly.",
+  "Check whether imports should be `import src.pkg` or `import pkg` with a src layout, since importing via `src.` usually means the package layout is misconfigured.",
+  "Check for missing `__init__.py` files or rootdir/conftest.py differences that only happen to work locally.",
+  "Reproduce locally in a clean virtualenv, or with a fresh clone, to confirm the fix before pushing."
+ ],
+ "qa2": [
+  "Recommend SQLite for a single-user desktop app.",
+  "SQLite is embedded and serverless, so users do not have to install, run, upgrade or secure a separate database server.",
+  "The database is a single file, which makes backup, portability and shipping the app simple.",
+  "SQLite handles single-user workloads and concurrency well, especially with WAL mode enabled.",
+  "Postgres adds operational overhead (service management, ports, credentials, upgrades) that a single-user desktop app does not need.",
+  "Cloud sync is a separate design problem from the local store: plan change tracking (timestamps or change log), conflict resolution, and idempotent uploads.",
+  "The cloud side can still use Postgres; using SQLite locally does not force the same engine on the server.",
+  "Reconsider Postgres only if the app needs multi-user concurrent writes or server-specific features locally."
+ ],
+ "qa3": [
+  "A merge combines two branches by creating a merge commit that preserves both histories as they happened.",
+  "A rebase replays your commits onto a new base, creating new commits with new SHAs and producing a linear history.",
+  "Merge is non-destructive and keeps the true history, while rebase rewrites history.",
+  "Rebase is dangerous on commits that are already pushed and shared, because others' work is based on the old SHAs and causes divergence and duplicate commits.",
+  "After rebasing a pushed branch you must force-push, and you should use `--force-with-lease` instead of `--force` to avoid overwriting others' work.",
+  "Do not rebase shared or public branches such as main; rebasing your own local or private feature branches is generally safe.",
+  "Conflicts during a rebase may need to be resolved commit by commit, and `git rebase --abort` returns to the starting state.",
+  "Lost commits can usually be recovered through `git reflog`, or by creating a backup branch before rebasing."
+ ],
+ "qa4": [
+  "Define the limit policy first: requests per time window, keyed per user, API key or IP, and which endpoints it applies to.",
+  "Choose an algorithm such as token bucket, sliding window or fixed window, and know the tradeoffs.",
+  "Use an existing library such as slowapi or fastapi-limiter, or a dependency or middleware, instead of writing everything from scratch.",
+  "Use a shared backing store such as Redis for counters when running multiple workers or instances, because in-memory limits are per-process.",
+  "Return HTTP 429 Too Many Requests with a Retry-After header, and optionally RateLimit headers, when the limit is exceeded.",
+  "Correctly identify clients behind proxies or load balancers (X-Forwarded-For), and only trust proxy headers from known proxies.",
+  "Decide fail-open versus fail-closed behavior if the rate-limit store is unavailable.",
+  "Test the limits, including concurrency and window edges, and add monitoring or logging for throttled requests before rollout."
+ ],
+ "qa5": [
+  "An empty input raises ZeroDivisionError because len(values) is 0.",
+  "The function must decide how to handle empty input: raise a clear ValueError, return None, or return a documented default.",
+  "It fails on generators and iterators because len() is not supported, and a consumed iterator cannot be iterated again.",
+  "Non-numeric elements such as None or strings raise TypeError, and the function does no validation.",
+  "Floating-point summation can accumulate error, so math.fsum or statistics.fmean is more accurate.",
+  "The built-in alternatives sum(values)/len(values) or statistics.mean/fmean are simpler and handle edge cases.",
+  "With Python 3 true division, integer input returns a float, which is fine but should be the intended behavior.",
+  "Tests should cover empty input, a single element, negative numbers, floats and iterator input."
+ ],
+ "qa6": [
+  "First update the local refs with `git fetch --prune` and make sure the local main is up to date with the remote.",
+  "List merged branches with `git branch --merged main` and review the list before deleting anything.",
+  "Exclude main, master, develop, and the currently checked-out branch (marked with `*`) from deletion.",
+  "Delete with `git branch -d`, lowercase, which refuses to delete unmerged branches, rather than `-D`, which forces deletion.",
+  "An example pipeline is `git branch --merged main | grep -vE '^\\*|main|master|develop' | xargs git branch -d`, after a dry run without the delete.",
+  "Branches merged with squash or rebase merges do not appear in `--merged`, so they need separate manual verification.",
+  "This deletes only local branches; deleting remote branches is a separate and riskier step.",
+  "Branches deleted by mistake can be recovered from `git reflog` or from the commit SHA that the delete command prints."
+ ],
+ "qa7": [
+  "useEffect runs after a render, and setState triggers a new render, so updating state in the effect can create a loop.",
+  "With no dependency array the effect runs after every render, so an unconditional setState inside it loops forever.",
+  "If the effect depends on the state it sets, and the new value is always different, each update re-triggers the effect.",
+  "Objects, arrays or functions created during render have a new reference every time, so including them as dependencies retriggers the effect even when the content is unchanged.",
+  "Fix it by using a correct dependency array, adding a guard condition, or only setting state when the value actually changes.",
+  "Stabilize references with useMemo or useCallback, move them inside the effect, or depend on primitive values.",
+  "Use functional updates `setState(prev => ...)` to avoid putting the state itself in the dependency array.",
+  "Consider whether the value should be derived during render instead of stored in state at all, and do not silence the exhaustive-deps lint rule to hide the problem."
+ ],
+ "pr": [
+  "get_json now retries HTTP 429 responses up to 3 times, for 4 attempts total, before failing.",
+  "The motivation is that the nightly sync job failed twice last week when the partner API returned 429 during its busy hour.",
+  "The wait time uses the Retry-After header when present, and otherwise uses exponential backoff of 1, 2 and 4 seconds.",
+  "Each wait is capped at 30 seconds, so the worst-case added delay per call is about 90 seconds plus request time.",
+  "If the final attempt still returns 429, raise_for_status raises HTTPError as before, so the caller behavior on persistent failure is unchanged.",
+  "Only 429 is retried; 5xx responses, timeouts and connection errors are still not retried.",
+  "A known limitation is that a Retry-After value given as an HTTP date, not seconds, raises ValueError from float(), and this should be handled or noted as follow-up.",
+  "Testing: two new tests in test_http.py cover the retry behavior and both pass; the change also requires `import time` in client/http.py."
+ ],
+ "h0": [
+  "Authentication verifies who a user is (identity), e.g. via password, MFA, or SSO.",
+  "Authorization determines what an authenticated identity is allowed to do (permissions/access to resources).",
+  "Authentication happens first; authorization decisions depend on the established identity.",
+  "A JWT is a signed token format that carries claims (e.g. sub, exp, roles/scopes) and is typically issued after authentication.",
+  "JWTs are used to convey identity and sometimes authorization claims to services statelessly, but the server still must enforce authorization checks.",
+  "The server must verify the JWT signature, pin the expected algorithm (reject alg=none), and validate exp, iss, and aud claims.",
+  "JWT payloads are only base64-encoded, not encrypted, so they must not contain secrets.",
+  "JWTs are hard to revoke before expiry, so use short lifetimes with refresh tokens or a denylist, and store them securely (e.g. HttpOnly cookies) to limit theft."
+ ],
+ "h1": [
+  "Exit code 137 means the process was killed by SIGKILL (128+9), most commonly by the kernel OOM killer.",
+  "Confirm with `docker inspect` (State.OOMKilled), `dmesg`/kernel logs, or the orchestrator's events (e.g. Kubernetes OOMKilled reason).",
+  "Production likely sets a memory limit (container or pod limit) lower than what the app uses, while the laptop has no limit or more memory.",
+  "Differences in production load or data volume can cause higher memory usage or a memory leak that only appears after minutes.",
+  "Runtimes like the JVM or Node may size heaps from host memory rather than the container limit, so set container-aware heap flags (e.g. -XX:MaxRAMPercentage, --max-old-space-size).",
+  "Measure actual usage (docker stats, metrics, heap profiling) to determine whether to raise the limit or fix a leak.",
+  "Fix by right-sizing memory requests/limits and/or reducing memory usage, rather than blindly removing limits.",
+  "Rule out other SIGKILL sources such as a failed liveness probe or `docker stop` timeout killing the container."
+ ],
+ "h2": [
+  "Gives a clear recommendation of one option (typically REST for a ten-screen app unless specific needs favor GraphQL).",
+  "REST is simpler to build, has mature tooling, and works well with standard HTTP caching and CDNs.",
+  "GraphQL lets clients fetch exactly the data each screen needs in one request, reducing over-fetching and round trips on mobile networks.",
+  "GraphQL adds server complexity: schema design, resolvers, N+1 query issues (needing dataloaders), and harder caching.",
+  "GraphQL requires extra security controls such as query depth/complexity limits and per-field authorization.",
+  "The choice should depend on team experience, number of client types, and how varied the screens' data needs are.",
+  "REST concerns like over-fetching can be mitigated with well-designed endpoints or a backend-for-frontend.",
+  "Mobile clients cannot be force-updated, so the API needs a versioning or backward-compatibility strategy either way."
+ ],
+ "h3": [
+  "Add the column as nullable first (no default, or with a constant default on Postgres 11+, which is metadata-only), avoiding a table rewrite.",
+  "Set a low lock_timeout on DDL statements so an ALTER waiting on an ACCESS EXCLUSIVE lock does not block all traffic, and retry on failure.",
+  "Deploy application code that writes the new column for all new and updated rows before backfilling.",
+  "Backfill existing rows in small batches with pauses, monitoring replication lag, locks, and autovacuum/bloat.",
+  "Add a CHECK (col IS NOT NULL) constraint as NOT VALID, then run VALIDATE CONSTRAINT separately, which takes only a weaker lock.",
+  "On Postgres 12+, SET NOT NULL then uses the validated check constraint to skip a full table scan, after which the check constraint can be dropped.",
+  "Take a backup and test the migration on a production-sized staging copy first.",
+  "Have a rollback plan and keep app code compatible with both old and new schema during the rollout."
+ ],
+ "h4": [
+  "The mutable default argument `defaults={}` is shared across calls, so values leak between calls and the caller's defaults get mutated.",
+  "Fix by using `defaults=None` and creating a new dict (or copying the passed defaults) inside the function.",
+  "The file is never closed; use a `with open(path) as f:` context manager.",
+  "`line.split(\"=\")` raises ValueError on lines with no `=` or with more than one `=`; use `split(\"=\", 1)`.",
+  "Values retain the trailing newline and keys/values are not stripped of whitespace.",
+  "Blank lines and comment lines are not skipped and will crash parsing.",
+  "No encoding is specified for open(), so behavior depends on platform default encoding.",
+  "A missing or unreadable file raises an exception with no handling or clear error."
+ ],
+ "h5": [
+  "On a shared branch, use `git revert <commit>` to create a new commit that undoes the changes without rewriting history.",
+  "Push the revert commit normally; no force-push is needed.",
+  "Avoid `git reset` plus force-push on shared branches because it rewrites history and breaks collaborators' clones.",
+  "If history rewriting is unavoidable (e.g. leaked secrets), coordinate with the team and use `--force-with-lease`, not plain `--force`.",
+  "Check branch protection rules, which may forbid force-pushes.",
+  "Reverting a merge commit requires `-m <parent-number>` to specify the mainline.",
+  "If the commit leaked a secret, rotate the secret immediately, since reverting does not remove it from history.",
+  "Verify the correct commit with `git log` before reverting and check the result afterward."
+ ],
+ "h6": [
+  "Run EXPLAIN ANALYZE to see whether the index is actually used and where time is spent.",
+  "Wrapping the indexed column in a function or expression (e.g. LOWER(col), col + 1) prevents index use unless there is a matching expression index.",
+  "Implicit type conversion or collation mismatch between the column and the parameter can disable the index.",
+  "Leading-wildcard LIKE '%x' patterns cannot use a standard B-tree index.",
+  "Low selectivity means the planner may correctly choose a sequential scan because the index would not help.",
+  "Stale statistics can cause bad plans; run ANALYZE to refresh them.",
+  "For multi-column indexes, the WHERE clause must use the leading column(s), and OR conditions can prevent index use.",
+  "The slowness may come from elsewhere, such as joins, sorts, fetching many rows from the heap, lock waits, or large result sets."
+ ],
+ "h7": [
+  "Inventory all existing cron jobs with their schedules, dependencies, runtimes, environment, and secrets.",
+  "Choose a managed or distributed scheduler (e.g. Kubernetes CronJobs, cloud schedulers, or a workflow tool like Airflow/Temporal) to remove the single point of failure.",
+  "Make jobs idempotent so retries or duplicate runs are safe.",
+  "Prevent concurrent duplicate runs with locking or concurrency policies (e.g. concurrencyPolicy: Forbid, distributed locks).",
+  "Add retries with backoff and define timeouts for each job.",
+  "Add monitoring and alerting for failures and missed runs (e.g. heartbeat/dead-man's-switch checks), with centralized logs.",
+  "Account for time zones and DST in schedules, and decide catch-up behavior for missed runs.",
+  "Migrate incrementally, running new and old in parallel or shadow mode carefully, disabling the old cron entry per job to avoid double execution, and keep a rollback path."
+ ]
+}

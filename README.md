@@ -77,6 +77,7 @@ plugin, follow the last section of [IMPLEMENT.md](IMPLEMENT.md#moving-to-the-plu
 | Meter | `hooks/reply_shape.py` | Stop hook measures each final reply and counts writing tells (decorative metaphor, contrast framing, emoji and others; logged, never nudged). Prompt hook tells Claude when the previous one ran long. `hooks/run.sh` finds the Python to run it; `/conciseclaude:meter` reports. |
 | Diff meter | `hooks/diff_shape.py` | Git `pre-commit` and `commit-msg` hooks, installed per repo by `/conciseclaude:diff-hooks`. Flags swallowed exceptions, dividers, forensic comments, comment blocks of six or more lines, docstrings longer than their body, comment-heavy diffs, oversized commits, and long or headed commit bodies. |
 | One-turn stages | `commands/v.md`, `commands/u.md` | `/conciseclaude:v <ask>` lifts the budget for one reply. `/conciseclaude:u <ask>` squeezes it to 150 chars. |
+| Reader level | `commands/reader.md` | `/conciseclaude:reader new`, `some`, `expert` or your own words tells Claude how technical you are. The prompt hook passes it on, and the budget widens for readers who need terms explained. |
 | Plugin | `.claude-plugin/`, `hooks/hooks.json` | Manifest, one-plugin marketplace, and hook wiring. |
 | Visuals | `assets/`, `docs/index.html`, `docs/benchmark/` | Icon and README images (HTML sources in `assets/src/`), and the GitHub Pages site with the 5.0 interactive benchmark. |
 | Writing pass | `skills/human-prose/SKILL.md` | For prose other people read: PR descriptions, docs, tickets, email. |
@@ -91,12 +92,38 @@ auth/middleware.py:42 calls datetime.now(timezone.utc). The 118 unit tests
 pass; I didn't run the browser tests.
 **Need you:** ship to staging now, or wait for the Monday window?
 ```
-The result comes first, after a plain-word tag (DONE, CAVEAT, BLOCKED or
-WORKING). Detail follows only if it changes your next move, in complete
-sentences. Literals are verbatim. **Need you:** comes last, and only when
+The result comes first. A report on work Claude did opens with a plain-word
+tag (DONE, CAVEAT, BLOCKED or WORKING); an answer to a question opens with
+the answer and has no tag. Detail follows only if you need it to understand
+the result or act on it, in complete sentences. Literals are verbatim. **Need you:** comes last, and only when
 Claude is blocked on you. A compact reply gets 600 prose characters.
 Security, destructive commands, errors, and plans get 900, but only under a
 visible label like **Risk:** or **Plan:**.
+
+## Tell it how technical you are
+The rules can't know who is reading, so you can say:
+```
+/conciseclaude:reader new       # new to programming: everyday words, every term explained, one step at a time
+/conciseclaude:reader some      # you code a little: the basics assumed, specialist terms explained
+/conciseclaude:reader expert    # standard terms, no explanations
+/conciseclaude:reader I'm a data analyst: SQL and Excel, a little Python, never used git
+/conciseclaude:reader clear     # back to no level
+```
+The level is saved on your machine and applies in every session until you
+change it. Without one, Claude assumes a working developer unless your own
+words show otherwise. For a reader below that level, Claude explains a
+technical term in a few plain words the first time it appears and says what
+a command does before giving it. Explaining takes room, so `new` gets 1,100
+characters (1,400 under a label) and `some` or your own words get 750
+(1,050).
+
+In the 6.4.0 benchmark ([write-up](docs/bench-2026-11-12-v64.md)), graders
+scored how well a newcomer could follow each reply: 3.0 of 5 with `new`
+against 2.1 with no level. Those replies were about 50% longer, cost 7 to
+18% more per call, and still left about ten technical terms unexplained.
+With no level set, 6.4.0 covers 82% of key points against 77% for 6.3.1,
+from a rule that says what each kind of reply must contain. Its replies are
+about 8% longer and a cold call costs about 5% more.
 
 ## Plain writing
 Version 6.0 adds rules against the writing habits readers flag in Claude's
@@ -202,6 +229,7 @@ calls and file contents make up most of the output. Reproduce it with
 /conciseclaude:meter report --days 7        # median, p90, % over, asked_more, asked_shorter, writing-tell rates
 /conciseclaude:meter mode block             # off | nudge (default) | block
 /conciseclaude:meter diff report --days 7   # the diff meter's report
+/conciseclaude:reader some                  # your technical level: new | some | expert | your own words | clear
 ```
 A manual install runs the same thing as `python ~/.claude/hooks/reply_shape.py report --days 7`.
 
@@ -226,12 +254,12 @@ The hooks in `hooks/hooks.json` each run through `hooks/run.sh`, which
 starts the first Python 3.8+ it finds. At session start, `session_start.sh`
 refreshes the diff meter's copy. When a reply finishes, `reply_shape.py`
 measures it, and when you send the next prompt it tells Claude if that reply
-ran long. After the first file edit in a session, `code_rules.py` adds the
+ran long and passes on your reader level if you set one. After the first file edit in a session, `code_rules.py` adds the
 code rules.
 
 `~/.claude/reply_shape/` holds the reply log (sizes, flags, writing-tell
 counts and a 12-character hash per reply, never the reply text), the mode
-setting and small per-session markers. If you install the diff meter, it
+setting, your reader level as you typed it, and small per-session markers. If you install the diff meter, it
 also uses `~/.claude/diff_shape/` (counts only, never code) and a copy of
 its script in `~/.claude/conciseclaude/`.
 
