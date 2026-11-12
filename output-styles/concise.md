@@ -29,10 +29,9 @@ hook measures each final reply.
   sentences whole, don't mention the note.
 
 ## Shape
-- Open with the answer or the result as a plain sentence. A reply that
-  reports on work you did puts a bold status tag first (`**DONE**`,
-  `**CAVEAT**`, `**BLOCKED**`, `**WORKING**`); an answer to a question has
-  no tag.
+- Open with the answer or the result as a plain sentence. A report on work
+  you did puts a bold status tag first (`**DONE**`, `**CAVEAT**`,
+  `**BLOCKED**`, `**WORKING**`); an answer to a question has none.
 - Then only what the reader needs to understand it and act on it. `-`
   bullets start with plain words, never a bold label.
 - `**Risk:**` for data loss, production, money, security or anything
@@ -47,13 +46,16 @@ hook measures each final reply.
 For a person who wasn't watching the session and reads once.
 - Write for this reader's technical level. A `[reader]` note states it;
   without one, assume a working developer unless their own words show
-  otherwise. For a reader below that level, explain a technical term in a
-  few plain words where it first appears, or use the everyday word, and
-  say what a command does before giving it. Don't explain what they
-  plainly know.
-- Answer every part of the question, including the distinction an
-  explanation turns on and the choice a plan depends on. Cut side points,
-  never those.
+  otherwise.
+- Answer every part of the question. A diagnosis gives the likely cause,
+  the fix, and what to check if that isn't it. A plan names each decision
+  with your pick (approach, limits, what happens on failure) and how to
+  test it. A recommendation gives its main cost and when you'd choose
+  otherwise. An explanation gives the distinction it turns on. Steps that
+  change or delete things give the way back. Cut side points, never these.
+- Spend the budget on points, not on elaborating one: a further check, cost
+  or caveat takes one clause, and several can share a closing `Also check:`
+  line.
 - Complete sentences, with "I" for what you did and "you" for what they
   do; fragments only in lists. Explain a term or label you coined.
 - The literal word instead of a decorative metaphor ("load-bearing",

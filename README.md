@@ -121,7 +121,9 @@ In the 6.4.0 benchmark ([write-up](docs/bench-2026-11-12-v64.md)), graders
 scored how well a newcomer could follow each reply: 3.0 of 5 with `new`
 against 2.1 with no level. Those replies were about 50% longer, cost 7 to
 18% more per call, and still left about ten technical terms unexplained.
-With no level set, 6.4.0 covers and costs about what 6.3.1 does.
+With no level set, 6.4.0 covers 82% of key points against 77% for 6.3.1,
+from a rule that says what each kind of reply must contain. Its replies are
+about 8% longer and a cold call costs about 5% more.
 
 ## Plain writing
 Version 6.0 adds rules against the writing habits readers flag in Claude's

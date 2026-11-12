@@ -12,9 +12,16 @@ this file disagree with it.
 
 ## 6.4.0 (2026-11-12)
 Replies written for the person reading them. Results are in
-`docs/bench-2026-11-12-v64.md`: with no level set, 6.4.0 covers 75% of key
-points against 6.3.1's 76% and costs the same or less; with `new`, graders
-scored replies 3.0 of 5 for a newcomer against 2.1.
+`docs/bench-2026-11-12-v64.md`: 6.4.0 covers 82% of key points against
+6.3.1's 77%, with replies about 8% longer and a cold call about 5% dearer;
+with `new`, graders scored replies 3.1 of 5 for a newcomer against 2.1.
+- New rule for what a reply must contain: a diagnosis gives what to check
+  if the likely cause isn't it, a plan names each decision and how to test
+  it, a recommendation gives its cost and when to choose otherwise, and
+  steps that change or delete things give the way back. Further points take
+  one clause each and can share a closing `Also check:` line. This replaces
+  6.2's one-line rule; in the benchmark both 6.3.1 and the first 6.4.0
+  drafts dropped these points.
 - You can tell Claude how technical you are: `/conciseclaude:reader new`,
   `some`, `expert`, or a sentence in your own words (`clear` removes it). The
   prompt hook passes the level to Claude at the start of a session, when it
@@ -32,7 +39,7 @@ scored replies 3.0 of 5 for a newcomer against 2.1.
 - The rule against metaphors is about decorative ones; a comparison that
   explains a concept is allowed. Replies say "I" for what Claude did and
   "you" for what you do.
-- The style is about 480 characters longer, roughly 120 input tokens a
+- The style is about 890 characters longer, roughly 220 input tokens a
   session. Setting the reader level no longer resets the meter's mode, and
   `config.json` now holds the level as you typed it; the log records only
   `new`, `some`, `expert` or `custom`.
