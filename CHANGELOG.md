@@ -10,6 +10,24 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.5.0 (2026-11-12)
+Replies cover nearly what default covers, at about half the length. Results
+are in `docs/bench-2026-11-12-v64.md`: 88% of key points on sixteen
+questions, against 91% for default and 82% for 6.4.0.
+- The default budget is 800 prose characters, up from 600, and a labeled
+  reply gets 1,100, up from 900. Reader levels add to these, so `new` gets
+  1,300 (1,600 labeled) and `some` or your own words 950 (1,250).
+- Before writing, Claude decides the points an expert's full answer would
+  make, including the mistake people most often make and how to back out if
+  a step fails, and keeps every one. On its own this added about a point;
+  with the larger budget it closed most of the gap to default.
+- Cost: over the suite, against default, 6.5.0 saves 27% on Opus and 1% on
+  Sonnet and costs 14% more on Haiku (6.4.0: 35%, 4% and 9% saved). Output
+  tokens are still 47%, 24% and 12% lower; Haiku's cost rises because each
+  later turn re-reads the longer replies. Each conversation ran twice, so
+  these figures can move by several points.
+- The reader-level budgets with 800 were not benchmarked.
+
 ## 6.4.0 (2026-11-12)
 Replies written for the person reading them. Results are in
 `docs/bench-2026-11-12-v64.md`: 6.4.0 covers 82% of key points against
