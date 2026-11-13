@@ -13,7 +13,7 @@ _spec = importlib.util.spec_from_file_location("reply_shape", SCRIPT)
 rs = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(rs)
 
-LONG = "word " * 160  # 799 prose chars
+LONG = "word " * 210  # 1,049 prose chars: over 800, under 1,100
 
 
 def run(cmd, payload, state, mode):
@@ -173,13 +173,13 @@ def test_table_cells_count_as_prose():
 
 
 def test_label_must_be_bold():
-    # Issue #2: an unformatted word, or a quoted log line, does not buy 900.
+    # Issue #2: an unformatted word, or a quoted log line, does not buy 1100.
     for text in ["Plan: do the thing.", "plan: lowercase too.", "Risk: none.",
                  "**DONE** The server said:\nERROR: bind failed"]:
-        assert rs.measure(text)["budget"] == 600, text
+        assert rs.measure(text)["budget"] == 800, text
     for text in ["**Plan:** do it", "⚠️ **Risk:** data loss", "**DONE** Merged.\n\n**Risk: live data touched.** Detail.",
                  "**error:** lower case is fine"]:
-        assert rs.measure(text)["budget"] == 900, text
+        assert rs.measure(text)["budget"] == 1100, text
 
 
 def test_angle_brackets_in_prose_count():
@@ -229,7 +229,7 @@ def test_reader_level_widens_the_budget_except_for_ultra(tmp_path):
     cli(tmp_path, "reader", "new")
     assert run("stop", {"session_id": "r3", "last_assistant_message": LONG}, tmp_path, "block") == ""
     row = json.loads((tmp_path / "reply_shape.jsonl").read_text("utf-8").splitlines()[-1])
-    assert row["budget"] == 1100 and row["reader"] == "new"
+    assert row["budget"] == 1300 and row["reader"] == "new"
     run("prompt", {"session_id": "r3", "prompt": "/u status?"}, tmp_path, "block")
     out = run("stop", {"session_id": "r3", "last_assistant_message": "word " * 40}, tmp_path, "block")
     assert json.loads(out)["decision"] == "block"
@@ -239,7 +239,7 @@ def test_nudge_quotes_the_widened_budgets(tmp_path):
     cli(tmp_path, "reader", "some")
     run("stop", {"session_id": "r4", "last_assistant_message": LONG}, tmp_path, "nudge")
     note = context(run("prompt", {"session_id": "r4", "prompt": "next"}, tmp_path, "nudge"))
-    assert "budget 750" in note and "get 1050 only" in note
+    assert "budget 950" in note and "get 1250 only" in note
 
 
 def test_own_words_reader_stays_out_of_the_log(tmp_path):

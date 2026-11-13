@@ -56,6 +56,8 @@ a { color: var(--accent); }
 .dbt .dot { position: absolute; top: 6px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; }
 .dbt .off { border: 2px solid var(--ink2); background: var(--card); }
 .dbt em { position: absolute; top: 3px; font-style: normal; font-size: 13px; white-space: nowrap; }
+.lvl { margin: 12px 0 0; color: var(--ink2); font-size: 14.5px; }
+code { background: var(--code); border-radius: 5px; padding: 1px 5px; font: 13px ui-monospace, Consolas, monospace; }
 .axis { position: relative; height: 18px; margin-left: 64px; font-size: 11.5px; color: var(--muted); }
 .axis span { position: absolute; transform: translateX(-50%); }
 .key { display: flex; gap: 16px; font-size: 13px; color: var(--ink2); margin-top: 6px; }
@@ -98,6 +100,24 @@ claude plugin install conciseclaude@conciseclaude</pre>
     <div class="card"><b>Measured</b><p>A meter checks every reply and nudges Claude when it runs long. Code arrives without narration.</p></div>
   </div>
 
+  <h2>New in 6.5.0</h2>
+  <p class="sub">Nearly the whole answer, at half the length. Sixteen questions on the 5.5 models, every reply graded blind.</p>
+  <div class="charts">
+    <div class="card">
+      <h3>Close to default</h3>
+      <p class="sub">Key points covered, 6.5.0 against default Claude Code</p>
+      <div id="gain"></div>
+    </div>
+    <div class="card">
+      <h3>Written for your level</h3>
+      <p class="sub">Tell Claude how technical you are</p>
+      <pre>/conciseclaude:reader new</pre>
+      <p class="lvl">Or <code>some</code>, <code>expert</code>, or a sentence in your own words. With <code>new</code>, Claude explains each technical term the first time and says what a command will do. Graders scored those replies 3.1 of 5 for a newcomer, against 2.1 with no level set.</p>
+    </div>
+  </div>
+  <p class="note">Claude decides an expert's points before writing, including the common mistake and the way back from a risky step, and keeps them in 800 characters. Coverage is 88% against default's 91% and 6.3.1's 77%. Against default, 6.5.0 saves 27% on Opus and 1% on Sonnet, and costs 14% more on Haiku, where each turn re-reads the longer replies.</p>
+  <details><summary>Show as table</summary><div class="tables" id="t640"></div></details>
+
   <h2>Benchmarked: 6.3.1</h2>
   <p class="sub">Against default Claude Code on the 5.5 models. Every case run twice; single-turn replies graded blind.</p>
   <div class="legend" id="legend3"></div>
@@ -127,7 +147,8 @@ claude plugin install conciseclaude@conciseclaude</pre>
   <details><summary>Show as tables</summary><div class="tables" id="tver"></div></details>
 
   <div class="cta">
-    <a class="btn primary" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-10-15-v6.md">Read the 6.3.1 benchmark</a>
+    <a class="btn primary" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-11-12-v64.md">Read the 6.5.0 benchmark</a>
+    <a class="btn ghost" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-10-15-v6.md">6.3.1 benchmark</a>
     <a class="btn ghost" href="benchmark/">5.0 interactive benchmark</a>
     <a class="btn ghost" href="https://github.com/drknowhow/ConciseClaude">View on GitHub</a>
   </div>
@@ -144,6 +165,7 @@ const REDUCE = [
   ["Cost", { opus: 24, sonnet: 4, haiku: 8 }],
 ];
 const COVER = { opus: [97, 83], sonnet: [94, 84], haiku: [92, 88] };
+const GAIN = { opus: [93.4, 87.9], sonnet: [91.4, 89.1], haiku: [87.1, 85.5] };
 const BYTYPE = [
   ["Ops conversation", { opus: -39, sonnet: -23, haiku: -30 }],
   ["Design conversation", { opus: -52, sonnet: -11, haiku: -27 }],
@@ -199,27 +221,29 @@ function drawReduce() {
   }
 }
 
-function drawCover() {
-  const box = document.getElementById("cover");
-  const lo = 75, hi = 100, x = v => (v - lo) / (hi - lo) * 100;
+// data[model] = [hollow dot, filled dot]; the filled one is the version the chart is about.
+function drawCover(id, data, lo, hi, ticks, onName, offName) {
+  const box = document.getElementById(id);
+  const x = v => (v - lo) / (hi - lo) * 100;
   for (const [key, name, color] of MODELS) {
-    const [def, cc] = COVER[key];
+    const [off, on] = data[key], low = Math.min(off, on), high = Math.max(off, on);
     const row = el("div", { class: "db" });
-    const t = el("div", { class: "dbt", "data-tip": `${name}: ${cc}% with ConciseClaude, ${def}% default` });
-    t.append(el("div", { class: "ln", style: `left:${x(cc)}%;width:${x(def) - x(cc)}%` }));
-    t.append(el("div", { class: "dot off", style: `left:${x(def)}%` }));
-    t.append(el("div", { class: "dot", style: `left:${x(cc)}%;background:${color}` }));
-    t.append(el("em", { style: `right:calc(${100 - x(cc)}% + 12px);font-weight:600;color:var(--ink)` }, `${cc}%`));
-    t.append(el("em", { style: `left:calc(${x(def)}% + 12px);color:var(--ink2)` }, `${def}%`));
+    const t = el("div", { class: "dbt", "data-tip": `${name}: ${on}% with ${onName}, ${off}% with ${offName}` });
+    t.append(el("div", { class: "ln", style: `left:${x(low)}%;width:${x(high) - x(low)}%` }));
+    t.append(el("div", { class: "dot off", style: `left:${x(off)}%` }));
+    t.append(el("div", { class: "dot", style: `left:${x(on)}%;background:${color}` }));
+    const look = v => v === on ? "font-weight:600;color:var(--ink)" : "color:var(--ink2)";
+    t.append(el("em", { style: `right:calc(${100 - x(low)}% + 12px);${look(low)}` }, `${low}%`));
+    t.append(el("em", { style: `left:calc(${x(high)}% + 12px);${look(high)}` }, `${high}%`));
     row.append(el("div", { class: "lab" }, name), t);
     box.append(row);
   }
   const axis = el("div", { class: "axis" });
-  for (const v of [80, 90, 100]) axis.append(el("span", { style: `left:${x(v)}%` }, v + "%"));
+  for (const v of ticks) axis.append(el("span", { style: `left:${x(v)}%` }, v + "%"));
   box.append(axis);
   const k = el("div", { class: "key" });
-  const a = el("span"); a.append(el("i", { style: "background:var(--ink2)" }), "ConciseClaude");
-  const b = el("span"); b.append(el("i", { style: "border:2px solid var(--ink2);width:7px;height:7px" }), "Default");
+  const a = el("span"); a.append(el("i", { style: "background:var(--ink2)" }), onName);
+  const b = el("span"); b.append(el("i", { style: "border:2px solid var(--ink2);width:7px;height:7px" }), offName);
   k.append(a, b);
   box.append(k);
 }
@@ -322,6 +346,8 @@ function drawTables() {
   t.append(table("Reduction against default", ["", ...names], REDUCE.map(([l, v]) => [l, ...MODELS.map(([k]) => `−${v[k]}%`)])));
   t.append(table("Key points covered", ["", "Default", "ConciseClaude"], MODELS.map(([k, n]) => [n, COVER[k][0] + "%", COVER[k][1] + "%"])));
   t.append(table("Cost by session", ["", ...names], BYTYPE.map(([l, v]) => [l, ...MODELS.map(([k]) => pct(v[k]))])));
+  document.getElementById("t640").append(table("Key points covered", ["", "Default", "6.5.0"],
+    MODELS.map(([k, n]) => [n, GAIN[k][0] + "%", GAIN[k][1] + "%"])));
   const tv = document.getElementById("tver");
   for (const p of VERSIONS)
     tv.append(table(p.title, ["", "Opus", "Sonnet"], p.x.map((x, i) => [x,
@@ -347,7 +373,8 @@ function tooltips() {
 legend("legend3", MODELS);
 legend("legend2", MODELS.slice(0, 2));
 drawReduce();
-drawCover();
+drawCover("gain", GAIN, 75, 100, [80, 90, 100], "6.5.0", "Default");
+drawCover("cover", COVER, 75, 100, [80, 90, 100], "ConciseClaude", "Default");
 drawByType();
 drawVersions();
 drawTables();
