@@ -34,9 +34,9 @@ were 67% shorter on Opus 5.5, 60% on Sonnet 5.5 and 46% on Haiku 5.5. Cost
 fell 24%, 4% and 8%. The saving is in conversation; a coding session or a
 single cold question costs about the same as default or a little more.
 Blind graders found 83 to 88% of the key points a full answer covers,
-against 92 to 97% for the default, with no reply judged too terse. 6.5.0
-raises that to 88% against default's 91% ([6.5.0 results](docs/bench-2026-11-12-v64.md))
-and gives up some of the saving for it.
+against 92 to 97% for the default, with no reply judged too terse. 6.6.0
+raises that to 88% against default's 91% and saves 29% on Opus and 8% on
+Sonnet ([6.6.0 results](docs/bench-2026-11-12-v64.md)).
 A Stop hook scores every reply and nudges Claude when one runs long;
 `/conciseclaude:meter report` shows how it's doing.
 
@@ -123,12 +123,12 @@ In the 6.4.0 benchmark ([write-up](docs/bench-2026-11-12-v64.md)), graders
 scored how well a newcomer could follow each reply: 3.0 of 5 with `new`
 against 2.1 with no level. Those replies were about 50% longer, cost 7 to
 18% more per call, and still left about ten technical terms unexplained.
-With no level set, 6.5.0 covers 88% of key points, against 91% for default
+With no level set, 6.6.0 covers 88% of key points, against 91% for default
 and 77% for 6.3.1, with replies about half as long as default's. Two rules
 do it: one says what each kind of reply must contain, and one has Claude
 decide an expert's points before writing, with an 800-character budget to
-fit them. Against default it saves 27% on Opus and 1% on Sonnet, and costs
-14% more on Haiku.
+fit them. Against default it saves 29% on Opus and 8% on Sonnet, and costs
+8% more on Haiku.
 
 ## Plain writing
 Version 6.0 adds rules against the writing habits readers flag in Claude's

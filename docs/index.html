@@ -100,12 +100,12 @@ claude plugin install conciseclaude@conciseclaude</pre>
     <div class="card"><b>Measured</b><p>A meter checks every reply and nudges Claude when it runs long. Code arrives without narration.</p></div>
   </div>
 
-  <h2>New in 6.5.0</h2>
+  <h2>New in 6.6.0</h2>
   <p class="sub">Nearly the whole answer, at half the length. Sixteen questions on the 5.5 models, every reply graded blind.</p>
   <div class="charts">
     <div class="card">
       <h3>Close to default</h3>
-      <p class="sub">Key points covered, 6.5.0 against default Claude Code</p>
+      <p class="sub">Key points covered, 6.6.0 against default Claude Code</p>
       <div id="gain"></div>
     </div>
     <div class="card">
@@ -115,7 +115,7 @@ claude plugin install conciseclaude@conciseclaude</pre>
       <p class="lvl">Or <code>some</code>, <code>expert</code>, or a sentence in your own words. With <code>new</code>, Claude explains each technical term the first time and says what a command will do. Graders scored those replies 3.1 of 5 for a newcomer, against 2.1 with no level set.</p>
     </div>
   </div>
-  <p class="note">Claude decides an expert's points before writing, including the common mistake and the way back from a risky step, and keeps them in 800 characters. Coverage is 88% against default's 91% and 6.3.1's 77%. Against default, 6.5.0 saves 27% on Opus and 1% on Sonnet, and costs 14% more on Haiku, where each turn re-reads the longer replies.</p>
+  <p class="note">Claude decides an expert's points before writing, including the common mistake and the way back from a risky step, and keeps them in 800 characters. Coverage is 88% against default's 91% and 6.3.1's 77%. A style text 30% shorter than 6.5.0's means each call reads less: against default, 6.6.0 saves 29% on Opus and 8% on Sonnet, and costs 8% more on Haiku, where each turn re-reads the longer replies.</p>
   <details><summary>Show as table</summary><div class="tables" id="t640"></div></details>
 
   <h2>Benchmarked: 6.3.1</h2>
@@ -147,7 +147,7 @@ claude plugin install conciseclaude@conciseclaude</pre>
   <details><summary>Show as tables</summary><div class="tables" id="tver"></div></details>
 
   <div class="cta">
-    <a class="btn primary" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-11-12-v64.md">Read the 6.5.0 benchmark</a>
+    <a class="btn primary" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-11-12-v64.md">Read the 6.6.0 benchmark</a>
     <a class="btn ghost" href="https://github.com/drknowhow/ConciseClaude/blob/main/docs/bench-2026-10-15-v6.md">6.3.1 benchmark</a>
     <a class="btn ghost" href="benchmark/">5.0 interactive benchmark</a>
     <a class="btn ghost" href="https://github.com/drknowhow/ConciseClaude">View on GitHub</a>
@@ -165,7 +165,7 @@ const REDUCE = [
   ["Cost", { opus: 24, sonnet: 4, haiku: 8 }],
 ];
 const COVER = { opus: [97, 83], sonnet: [94, 84], haiku: [92, 88] };
-const GAIN = { opus: [93.4, 87.9], sonnet: [91.4, 89.1], haiku: [87.1, 85.5] };
+const GAIN = { opus: [93.4, 90.3], sonnet: [91.4, 87.9], haiku: [87.1, 87.1] };
 const BYTYPE = [
   ["Ops conversation", { opus: -39, sonnet: -23, haiku: -30 }],
   ["Design conversation", { opus: -52, sonnet: -11, haiku: -27 }],
@@ -346,7 +346,7 @@ function drawTables() {
   t.append(table("Reduction against default", ["", ...names], REDUCE.map(([l, v]) => [l, ...MODELS.map(([k]) => `−${v[k]}%`)])));
   t.append(table("Key points covered", ["", "Default", "ConciseClaude"], MODELS.map(([k, n]) => [n, COVER[k][0] + "%", COVER[k][1] + "%"])));
   t.append(table("Cost by session", ["", ...names], BYTYPE.map(([l, v]) => [l, ...MODELS.map(([k]) => pct(v[k]))])));
-  document.getElementById("t640").append(table("Key points covered", ["", "Default", "6.5.0"],
+  document.getElementById("t640").append(table("Key points covered", ["", "Default", "6.6.0"],
     MODELS.map(([k, n]) => [n, GAIN[k][0] + "%", GAIN[k][1] + "%"])));
   const tv = document.getElementById("tver");
   for (const p of VERSIONS)
@@ -373,7 +373,7 @@ function tooltips() {
 legend("legend3", MODELS);
 legend("legend2", MODELS.slice(0, 2));
 drawReduce();
-drawCover("gain", GAIN, 75, 100, [80, 90, 100], "6.5.0", "Default");
+drawCover("gain", GAIN, 75, 100, [80, 90, 100], "6.6.0", "Default");
 drawCover("cover", COVER, 75, 100, [80, 90, 100], "ConciseClaude", "Default");
 drawByType();
 drawVersions();

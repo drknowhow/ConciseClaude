@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-__version__ = "6.5.0"  # must equal VERSION; tests/test_version_sync.py enforces it
+__version__ = "6.6.0"  # must equal VERSION; tests/test_version_sync.py enforces it
 
 # Prose characters allowed per reply, by profile. None = unbounded (still logged).
 BUDGETS: Dict[str, Optional[int]] = {
