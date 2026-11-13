@@ -10,6 +10,16 @@ this file disagree with it.
   optional module.
 - **Patch:** fixes and wording that don't change what gets measured.
 
+## 6.6.0 (2026-11-13)
+The style text is 30% shorter (3,188 characters against 4,529) with every
+rule kept, so each call reads less. Against default over the suite it saves
+29% on Opus and 8% on Sonnet, and costs 8% more on Haiku (6.5.0: −27%, −1%,
++14%). Key points covered: 88.4% against 6.5.0's 87.5% and default's 90.6%.
+The two rules on what an answer must contain keep their 6.5.0 wording; a
+version that shortened them too lost 2 points. Telling Haiku to ignore the
+style cost 10% more than default and covered 81%, so Haiku keeps the rules.
+Results are in `docs/bench-2026-11-12-v64.md`.
+
 ## 6.5.0 (2026-11-12)
 Replies cover nearly what default covers, at about half the length. Results
 are in `docs/bench-2026-11-12-v64.md`: 88% of key points on sixteen
